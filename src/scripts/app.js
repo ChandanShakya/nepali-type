@@ -211,11 +211,10 @@ function cp(s){
  if(!s){toast("Nothing to copy yet");return}
  const fb=()=>{let ok=false;try{const a=document.createElement("textarea");a.value=s;a.setAttribute("readonly","");a.style.cssText="position:fixed;top:0;left:0;opacity:0";document.body.appendChild(a);a.select();a.setSelectionRange(0,s.length);ok=document.execCommand("copy");a.remove()}catch(e){}toast(ok?"Copied ✓":"Copy failed")};
  if(navigator.clipboard?.writeText)navigator.clipboard.writeText(s).then(()=>toast("Copied ✓"),fb);else fb()}
-$("#c1").onclick=()=>cp(uni());
 // corner copy buttons; the icon turns into a tick briefly so the box that was copied is clear
 const TICK='<svg viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>';
 document.querySelectorAll(".cc").forEach(b=>{const icon=b.innerHTML;b.onclick=()=>{
- const s=b.dataset.copy==="font"?preeti():$("#rom").textContent;cp(s);if(!s)return;
+ const k=b.dataset.copy,s=k==="uni"?uni():k==="font"?preeti():mode==="roman"?rin.value:$("#rom").textContent;cp(s);if(!s)return;
  b.innerHTML=TICK;b.classList.add("ok");setTimeout(()=>{b.innerHTML=icon;b.classList.remove("ok")},1200)}});
 $("#cl").onclick=()=>{
  const was=mode==="roman"?rin.value:buf;if(!was)return;
@@ -249,7 +248,7 @@ $("#pre").addEventListener("click",e=>{if(mode!=="preeti"||!buf)return;const o=t
 
 // top bar can be hidden for more room; remembered
 const setHd=on=>{document.documentElement.classList.toggle("hd-off",!on);store.set("nw-hd",on?"1":"0")};
-$("#hidehd").onclick=()=>setHd(false);$("#showhd").onclick=()=>setHd(true);
+$("#hidehd").onclick=()=>setHd(false);$("#showhd").onclick=()=>{buzz();setHd(true)};
 
 // iOS Safari ignores interactive-widget: size the app to the visible area so the dock sits above the keyboard
 if(window.visualViewport){const vv=visualViewport,fit=()=>{document.documentElement.style.setProperty("--vh",vv.height+"px");if(vv.offsetTop)scrollTo(0,0)};vv.addEventListener("resize",fit);fit()}

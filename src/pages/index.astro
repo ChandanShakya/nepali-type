@@ -41,30 +41,30 @@ header{display:flex;align-items:center;gap:6px;padding:10px 10px 6px 14px;paddin
 .pill{height:34px;padding:0 14px;border-radius:17px;font-size:13.5px;font-weight:600;flex:none;display:inline-flex;align-items:center;background:var(--ac);color:var(--ac-fg)}
 .ib{width:38px;height:38px;border-radius:19px;display:grid;place-items:center;color:var(--mut);flex:none}
 .ib:hover{background:var(--surface2);color:var(--fg)}
-#showhd{position:fixed;top:max(8px,env(safe-area-inset-top));right:max(8px,calc(50% - 402px));z-index:4;width:34px;height:34px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:none}
-.hd-off #showhd{display:grid}
+#showhd{display:none}.hd-off #showhd{display:inline-flex;flex:.8 1 0}
 /* main: scrolls on its own, the dock stays put */
 #top{flex:1;overflow:auto;overscroll-behavior:contain;padding:4px 14px 12px;min-height:0;display:flex;flex-direction:column;gap:10px}
 .hd-off #top{padding-top:10px}
 .card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);flex:none}
 /* each output box copies its own text from its corner */
-.cc{position:absolute;top:4px;right:4px;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--mut)}
+/* copy, save and clear share one button look: 38px tall, 1px border, 10px radius */
+.cc{position:absolute;top:6px;right:6px;width:38px;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--surface);display:grid;place-items:center;color:var(--fg);transition:transform .08s}
+.cc:active{transform:scale(.94)}
 .cc:hover{background:var(--surface2);color:var(--fg)}
-.cc.ok{color:var(--ac)}
+.cc.ok{color:var(--ac);border-color:var(--ac);background:var(--ac-soft)}
 .card:has(.cc) .lab{padding-right:48px}
-.hd-off #rom,.hd-off #pre{padding-right:48px}
-#rin{display:block;flex:none;width:100%;min-height:72px;resize:vertical;border:1px solid var(--line);border-radius:16px;padding:12px 16px;font:18px/1.45 ui-monospace,"SF Mono",Menlo,Consolas,monospace;background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
-.hd-off #rin{padding-right:48px}
-#rin:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-soft)}
+.hd-off #rin,.hd-off #out,.hd-off #rom,.hd-off #pre{padding-right:48px}
+#rin{display:block;width:100%;min-height:64px;resize:vertical;border:0;border-radius:0 0 16px 16px;padding:4px 16px 12px;font:18px/1.45 ui-monospace,"SF Mono",Menlo,Consolas,monospace;background:none;color:var(--fg)}
+#rin:focus{outline:none}
+#rc:focus-within{border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-soft)}
 #rin::placeholder{color:var(--mut)}
 .lab{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;padding:10px 16px 0}
 /* collapsed (top bar hidden): no card titles, icon-only buttons, room for the restore button */
 .hd-off .lab{display:none}
-.hd-off #out,.hd-off #rom,.hd-off #pre{padding-top:12px}
-.hd-off body:not(.roman) #out{padding-right:48px}
+.hd-off #rin,.hd-off #out,.hd-off #rom,.hd-off #pre{padding-top:12px}
 .hd-off .bt .lbl,.hd-off .bt .tx{display:none}
 .hd-off .bt svg{display:inline-block!important}
-.hd-off .bt{padding:0 13px}
+.hd-off .bt,#cl{padding:0;width:38px}
 #out{min-height:96px;padding:4px 16px 10px;font-size:32px;line-height:1.6;word-break:break-word;white-space:pre-wrap}
 #out.e{color:var(--mut);font-size:16px;line-height:1.5;padding-top:10px}
 #out.e b{color:var(--fg)}
@@ -74,7 +74,7 @@ header{display:flex;align-items:center;gap:6px;padding:10px 10px 6px 14px;paddin
 body:not(.roman) #out,body:not(.roman) #pre{cursor:text}
 .sm{font:italic 16px ui-monospace,monospace;color:var(--ac);border-bottom:2px dotted var(--ac);margin:0 1px}
 .acts{display:flex;gap:6px;padding:0 10px 10px;align-items:center}
-.bt{white-space:nowrap;flex:none;height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform .08s}
+.bt{white-space:nowrap;flex:none;height:38px;min-width:38px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform .08s}
 .bt:active{transform:scale(.96)}
 .bt.p{background:var(--ac);border-color:var(--ac);color:var(--ac-fg)}
 .bt.fav.on{color:var(--ac);border-color:var(--ac);background:var(--ac-soft)}
@@ -82,7 +82,8 @@ body:not(.roman) #out,body:not(.roman) #pre{cursor:text}
 .sp{flex:1}
 #pre{padding:2px 16px 12px;min-height:44px;font:22px/1.5 PreetiL,ui-monospace,monospace;word-break:break-all;white-space:pre-wrap}
 /* font keys mode: the same text spelled the Romanized way, to learn or reuse it */
-.roman #rc{display:none}
+/* one Romanized box in both modes: the input on top in Romanized mode, read-only spelling in font keys mode */
+.roman #rc{order:-1}.roman #rom{display:none}
 #rom{padding:2px 16px 12px;min-height:40px;font:18px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;word-break:break-word;white-space:pre-wrap;color:var(--blue)}
 #rom:empty::before{content:"Romanized spelling appears here";font:14px system-ui,sans-serif;color:var(--mut)}
 #pre:empty::before{content:"Devanagari font keystrokes appear here";font:14px system-ui,sans-serif;color:var(--mut)}
@@ -164,22 +165,21 @@ li{margin:5px 0}
  <button class="ib" id="theme" aria-label="Toggle dark mode" title="Dark / light"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
  <button class="ib" id="hidehd" aria-label="Hide top bar" title="Hide top bar"><svg viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg></button>
 </header>
-<button class="ib" id="showhd" aria-label="Show top bar" title="Show top bar"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
 <main id="top">
- <textarea id="rin" hidden placeholder="Type in English… namaste, nepal, dhanyabad" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Romanized input"></textarea>
  <section class="card">
   <div class="lab"><span>Unicode</span><span id="cnt"></span></div>
+  <button class="cc" data-copy="uni" aria-label="Copy Unicode text" title="Copy Unicode text"><Fragment set:html={copy}/></button>
   <div id="out" class="d e" aria-live="polite"></div>
   <div class="acts">
-   <button class="bt p" id="c1" aria-label="Copy Unicode text" title="Copy Unicode text"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg><span class="lbl">Copy</span></button>
    <button class="bt fav" id="fav" aria-pressed="false" aria-label="Save the last word" title="Save the last word"><Fragment set:html={star}/><span class="tx">Save</span></button>
    <span class="sp"></span>
    <button class="bt" id="cl" aria-label="Clear" title="Clear"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"/></svg></button>
   </div>
  </section>
  <section class="card" id="rc">
-  <div class="lab"><span>Romanized spelling</span></div>
-  <button class="cc" data-copy="rom" aria-label="Copy Romanized spelling" title="Copy Romanized spelling"><Fragment set:html={copy}/></button>
+  <div class="lab"><span>Romanized</span></div>
+  <button class="cc" data-copy="rom" aria-label="Copy Romanized text" title="Copy Romanized text"><Fragment set:html={copy}/></button>
+  <textarea id="rin" placeholder="Type in English… namaste, nepal, dhanyabad" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Romanized input"></textarea>
   <div id="rom"></div>
  </section>
  <section class="card">
@@ -191,6 +191,7 @@ li{margin:5px 0}
 <div id="dock">
  <div id="info"></div><div id="sug"></div><div id="kb"></div>
  <div class="row" id="bar">
+  <button class="k t" id="showhd" aria-label="Show top bar" title="Show top bar"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
   <button class="k t" id="mode"></button>
   <button class="k t" id="chart" aria-label="Chart"><Fragment set:html={book}/><span class="tx">Chart</span></button>
   <button class="k t" id="saved" aria-label="Saved words"><Fragment set:html={star}/><span class="tx">Saved</span><span class="n" id="favn"></span></button>

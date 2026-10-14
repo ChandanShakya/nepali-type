@@ -1,4 +1,4 @@
-import {R,SH,SH2,KEYS,P,conv,clean,toPreeti,roman,ROMAN,makeDict} from "./nepali.js";
+import {R,SH,SH2,KEYS,P,conv,clean,toPreeti,toRoman,roman,ROMAN,makeDict} from "./nepali.js";
 import words from "../data/words.txt?raw";
 
 const dict=makeDict(words);
@@ -32,7 +32,6 @@ const preeti=()=>mode==="roman"?toPreeti(uni()):buf;
 function chip(cls,main,small,fn){const b=document.createElement("button");b.className="sg "+cls;b.innerHTML="<span class=d>"+main+"</span><small>"+small+"</small>";
  b.onpointerdown=e=>e.preventDefault();// keep the text box focused so the phone keyboard stays open
  b.onclick=()=>{buzz();fn()};return b}
-function empty(t){const s=document.createElement("span");s.className="hint0";s.innerHTML=t;sg.appendChild(s)}
 
 // ---------- saved words (client side only) ----------
 let favs=[];try{favs=JSON.parse(store.get("nw-favs"))||[]}catch(e){}
@@ -56,6 +55,8 @@ function render(u,at=-1){
  out.classList.toggle("e",!u);
  const c=clean(u).trim(),w=c?c.split(/\s+/).length:0;
  $("#cnt").textContent=c?w+(w>1?" words · ":" word · ")+[...c].length+" chars":"";
+ // Romanized spelling of each word (font keys mode); a word with no exact spelling is shown as is
+ if(mode==="preeti")$("#rom").textContent=clean(u).split(/(\s+)/).map(w=>/\S/.test(w)?toRoman(w)??w:w).join("");
  $("#pre").innerHTML=mode==="preeti"&&buf?esc(buf.slice(0,cur))+CARET+esc(buf.slice(cur)):esc(preeti());
  const cw=curWord(),on=!!cw&&favs.some(f=>f.u===cw);
  $("#fav").classList.toggle("on",on);$("#fav").setAttribute("aria-pressed",on);
@@ -90,9 +91,9 @@ function drawPreeti(last){
  if(last){
   if(last==="m"){const ok=!/m$/.test(raw);msg=ks("m")+(ok?" → <b>hook joined</b>":" → <b>hook only.</b> Joins after <kbd>k</kbd>प <kbd>p</kbd>उ <kbd>e</kbd>भ <kbd>q</kbd>त्र <kbd>Q</kbd>त्त. For म type <kbd>d</kbd>")}
   else msg=ks(last)+" → <b class=d>"+(last.length>1?sign(clean(conv(last))):lab(last))+"</b>";
-  if(w)msg+=" &nbsp;word <b class=d>"+dsp(clean(conv(w)))+"</b>";
+  if(w){const wu=clean(conv(w)),r=toRoman(wu);msg+=" &nbsp;word <b class=d>"+dsp(wu)+"</b>"+(r?" = <kbd>"+esc(r)+"</kbd>":"")}
  }
- info.innerHTML=msg||"Each key is one glyph, like in Word · tap the text or drag <b>space</b> to move the cursor";
+ info.innerHTML=msg;// empty until a key is typed, so the dock stays small
  sg.innerHTML="";
  // dictionary: finish the word being typed
  const wu=w?clean(conv(w)):"";
@@ -104,7 +105,7 @@ function drawPreeti(last){
    const r=clean(k==="*"?conv(w.slice(0,st)+"l"+w.slice(st)):conv(w+k));
    sg.appendChild(chip("",dsp(r),k==="*"?"<kbd>l</kbd> first":ks(k),()=>{
     if(k==="*"){const o=cur-w.length+st;buf=buf.slice(0,o)+"l"+buf.slice(o);cur++;draw("l")}else add(k)}))})}
- if(!sg.children.length){favChips();if(!sg.children.length)empty("Suggestions appear here after a letter")}
+ if(!sg.children.length)favChips();
 }
 
 // ---------- Romanized mode ----------
@@ -121,8 +122,8 @@ function drawRoman(){
  sg.innerHTML="";
  if(!last){
   firstWord=null;
-  info.innerHTML="<kbd>ka</kbd> क <kbd>kaa</kbd> का <kbd>ki</kbd> कि <kbd>kh</kbd> ख <kbd>T</kbd> ट <kbd>sh</kbd> श"+(fine?" · <kbd>Tab</kbd> picks the blue word":"");
-  favChips();["namaste","nepaal","dhanyabaad","maayaa"].forEach(w=>sg.appendChild(chip("",roman(w).u,"<kbd>"+w+"</kbd>",()=>insert(w+" "))));return}
+  info.innerHTML="";
+  favChips();["namaste","nepaal","dhanyawaad","maayaa"].forEach(w=>sg.appendChild(chip("",roman(w).u,"<kbd>"+w+"</kbd>",()=>insert(w+" "))));return}
  const wu=roman(word).u,lu=roman(last[0]).u;
  info.innerHTML="<kbd>"+esc(last[0])+"</kbd> → <b class=d>"+(last[1]==="v"?lu+" / ◌"+(ROMAN.V[last[0]][1]||"(a)"):sign(lu))+"</b> &nbsp;word <b class=d>"+dsp(wu)+"</b>";
  // dictionary words that sound like what was typed (nepal -> नेपाल), blue
@@ -133,7 +134,6 @@ function drawRoman(){
  ALL.filter(k=>k.length>last[0].length&&k.startsWith(last[0])).forEach(k=>opt(k.slice(last[0].length),"c"));
  if(last[1]==="c"){VOW.forEach(x=>opt(x,""));opt("\\","")}
  if(last[1]==="c"||last[1]==="v"){opt("M","");opt("~","");opt("H","")}
- if(!sg.children.length)empty("Keep typing…");
 }
 
 // ---------- shared ----------
@@ -143,6 +143,12 @@ function draw(last){
  const c=mode==="preeti"&&out.querySelector(".caret");
  if(c)c.scrollIntoView({block:"nearest"});else if(document.activeElement!==rin){const top=$("#top");top.scrollTop=top.scrollHeight}
 }
+// both modes hold the same text: switching converts it instead of showing an old draft
+function carry(m){
+ if(m==="preeti"){buf=toPreeti(roman(rin.value).u);cur=buf.length}
+ // words with no exact Romanized spelling stay in Devanagari; roman() passes them through unchanged
+ else rin.value=clean(conv(buf)).split(/(\s+)/).map(w=>/\S/.test(w)?toRoman(w)??w:w).join("");
+}
 function setMode(m){
  mode=m;store.set("nw-mode",m);document.body.classList.toggle("roman",m==="roman");
  rin.hidden=m!=="roman";
@@ -151,7 +157,7 @@ function setMode(m){
  document.querySelectorAll("[data-mode]").forEach(e=>e.hidden=e.dataset.mode!==m);
  draw();if(m==="roman"&&fine)rin.focus();
 }
-$("#mode").onclick=()=>{buzz();setMode(mode==="roman"?"preeti":"roman")};
+$("#mode").onclick=()=>{buzz();const m=mode==="roman"?"preeti":"roman";carry(m);setMode(m)};
 rin.addEventListener("input",()=>draw());
 // Tab takes the first dictionary word, like a phone keyboard's middle suggestion
 rin.addEventListener("keydown",e=>{if(e.key==="Tab"&&!e.shiftKey&&firstWord){e.preventDefault();pick(firstWord.r)}});

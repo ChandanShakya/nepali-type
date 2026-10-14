@@ -18,7 +18,7 @@ const group = (o: Record<string, any>, val: (v: any) => string) => {
 const vowels = group(ROMAN.V, (v) => v[0]).map(([u, ks]) => ({ u, ks, k: roman("k" + ks[0]).u }));
 const cons = group(ROMAN.C, (v) => v);
 const signs: [string, string, string][] = [["M", "ं", "anusvara"], ["~", "ँ", "chandrabindu"], ["H", "ः", "visarga"], ["\\", "्", "halant, e.g. chhan\\ → छन्"], [".", "।", "full stop"], ["..", ".", "dot"], ["0–9", "०–९", "digits"]];
-const words = ["namaste", "nepaal", "dhanyabaad", "kShetra", "gyaan", "shrii", "dharma", "kRiShi", "gangaa", "maanchhe", "saMsaar", "chaa~d", "chhan\\"];
+const words = ["namaste", "nepaal", "dhanyawaad", "kShetra", "gyaan", "shrii", "dharma", "kRiShi", "gangaa", "maanchhe", "saMsaar", "chaa~d", "chhan\\"];
 
 const CN = "s v u 3 ª r 5 h em ` 6 7 8 9 0f t y b w g k km a e d o / n j z if ; x If q 1".split(" ");
 const MK = [["", ""], ["", "f"], ["l", ""], ["", "L"], ["", "'"], ["", '"'], ["", "["], ["", "]"], ["", "}"], ["", "f]"], ["", "f}"], ["", "+"], ["", "M"]];

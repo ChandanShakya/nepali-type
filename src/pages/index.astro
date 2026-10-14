@@ -51,7 +51,13 @@ header{display:flex;align-items:center;gap:6px;padding:10px 10px 6px 14px;paddin
 #rin:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-soft)}
 #rin::placeholder{color:var(--mut)}
 .lab{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;padding:10px 16px 0}
-.hd-off #top>.card:first-of-type .lab{padding-right:52px}
+/* collapsed (top bar hidden): no card titles, icon-only buttons, room for the restore button */
+.hd-off .lab{display:none}
+.hd-off #out,.hd-off #rom,.hd-off #pre{padding-top:12px}
+.hd-off body:not(.roman) #out{padding-right:48px}
+.hd-off .bt .lbl,.hd-off .bt .tx{display:none}
+.hd-off .bt svg{display:inline-block!important}
+.hd-off .bt{padding:0 13px}
 #out{min-height:96px;padding:4px 16px 10px;font-size:32px;line-height:1.6;word-break:break-word;white-space:pre-wrap}
 #out.e{color:var(--mut);font-size:16px;line-height:1.5;padding-top:10px}
 #out.e b{color:var(--fg)}
@@ -68,13 +74,18 @@ body:not(.roman) #out,body:not(.roman) #pre{cursor:text}
 .bt.fav.on svg{fill:currentColor}
 .sp{flex:1}
 #pre{padding:2px 16px 12px;min-height:44px;font:22px/1.5 PreetiL,ui-monospace,monospace;word-break:break-all;white-space:pre-wrap}
+/* font keys mode: the same text spelled the Romanized way, to learn or reuse it */
+.roman #rc{display:none}
+#rom{padding:2px 16px 12px;min-height:40px;font:18px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;word-break:break-word;white-space:pre-wrap;color:var(--blue)}
+#rom:empty::before{content:"Romanized spelling appears here";font:14px system-ui,sans-serif;color:var(--mut)}
 #pre:empty::before{content:"Devanagari font keystrokes appear here";font:14px system-ui,sans-serif;color:var(--mut)}
-@media (max-width:400px){.bt .tx,#c1 svg{display:none}.bt{padding:0 12px}}
+@media (max-width:440px){.bt .tx,#c1 svg,#c2 svg{display:none}.bt{padding:0 12px}}
 @media (min-width:700px){#out{font-size:36px}}
 /* dock: hints, suggestions, keyboard and the toolbar row */
 #dock{flex:none;border-top:1px solid var(--line);background:var(--bg);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
 #info{min-height:20px;padding:0 6px;font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #info b{color:var(--fg)}
+#info:empty,#sug:empty{display:none}
 #sug{display:flex;gap:6px;overflow-x:auto;padding:5px 2px 7px;min-height:58px;scrollbar-width:none;scroll-snap-type:x proximity}
 #sug::-webkit-scrollbar{display:none}
 .sg{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:3px 12px;text-align:center;line-height:1.2;min-width:48px;scroll-snap-align:start;animation:pop .18s ease-out both}
@@ -85,7 +96,6 @@ body:not(.roman) #out,body:not(.roman) #pre{cursor:text}
 .sg .d{display:block;font-size:21px}
 .sg small{display:block;font-size:10px;color:var(--mut)}
 @keyframes pop{from{opacity:0;transform:translateY(4px)}}
-.hint0{color:var(--mut);font-size:12.5px;align-self:center;padding:0 6px}
 kbd{font:11px ui-monospace,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 4px;background:var(--surface2);color:var(--fg);margin:0 1px;display:inline-block}
 .roman #kb,.roman .pk{display:none}
 .row{display:flex;gap:4px;margin-bottom:4px}
@@ -155,12 +165,16 @@ li{margin:5px 0}
   <div class="lab"><span>Unicode</span><span id="cnt"></span></div>
   <div id="out" class="d e" aria-live="polite"></div>
   <div class="acts">
-   <button class="bt p" id="c1"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>Copy</button>
-   <button class="bt" id="c2" aria-label="Copy Devanagari font text"><span class="tx">Copy </span>Font</button>
+   <button class="bt p" id="c1" aria-label="Copy Unicode text" title="Copy Unicode text"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg><span class="lbl">Copy</span></button>
+   <button class="bt" id="c2" aria-label="Copy Devanagari font text" title="Copy Devanagari font text"><svg viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg><span class="tx">Copy </span><span class="lbl">Font</span></button>
    <button class="bt fav" id="fav" aria-pressed="false" aria-label="Save the last word" title="Save the last word"><Fragment set:html={star}/><span class="tx">Save</span></button>
    <span class="sp"></span>
    <button class="bt" id="cl" aria-label="Clear" title="Clear"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"/></svg></button>
   </div>
+ </section>
+ <section class="card" id="rc">
+  <div class="lab"><span>Romanized</span><span>type this in Romanized mode</span></div>
+  <div id="rom"></div>
  </section>
  <section class="card">
   <div class="lab"><span>Devanagari font</span><span>Preeti layout</span></div>

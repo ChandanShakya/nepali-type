@@ -1,0 +1,145 @@
+---
+// Printable cheatsheet. Everything is computed at build time from the same converter the app uses.
+import "../styles/base.css";
+import {R,SH2,P,conv,clean,roman,toPreeti,ROMAN} from "../scripts/nepali.js";
+
+const site = Astro.site?.href ?? "/";
+const url = new URL("/chart/", site).href;
+const dsp = (u: string) => u.replace(/्$/, "्‍");
+const sign = (v: string) => (/^[ािीुूृेैोौंँः्]/.test(v) ? "◌" + v : dsp(v));
+const glyph = (c: string) => (c === "m" ? "hook" : P[c] === undefined ? "" : sign(P[c].replace("\u0001", "ि").replace("\u0002", "र्")));
+
+// group romanized spellings that give the same result: aa, A -> आ
+const group = (o: Record<string, any>, val: (v: any) => string) => {
+  const m = new Map<string, string[]>();
+  for (const [k, v] of Object.entries(o)) { const u = val(v); m.set(u, [...(m.get(u) ?? []), k]); }
+  return [...m];
+};
+const vowels = group(ROMAN.V, (v) => v[0]).map(([u, ks]) => ({ u, ks, k: roman("k" + ks[0]).u }));
+const cons = group(ROMAN.C, (v) => v);
+const signs: [string, string, string][] = [["M", "ं", "anusvara"], ["~", "ँ", "chandrabindu"], ["H", "ः", "visarga"], ["\\", "्", "halant, e.g. chhan\\ → छन्"], [".", "।", "full stop"], ["..", ".", "dot"], ["0–9", "०–९", "digits"]];
+const words = ["namaste", "nepaal", "dhanyabaad", "kShetra", "gyaan", "shrii", "dharma", "kRiShi", "gangaa", "maanchhe", "saMsaar", "chaa~d", "chhan\\"];
+
+const CN = "s v u 3 ª r 5 h em ` 6 7 8 9 0f t y b w g k km a e d o / n j z if ; x If q 1".split(" ");
+const MK = [["", ""], ["", "f"], ["l", ""], ["", "L"], ["", "'"], ["", '"'], ["", "["], ["", "]"], ["", "}"], ["", "f]"], ["", "f}"], ["", "+"], ["", "M"]];
+const cell = (k: string, i: number) => (k === "/" && i === 4 ? "?" : k === "/" && i === 5 ? "¿" : MK[i][0] + k + MK[i][1]);
+const half = "S V U R H T Y W G K A E D N J Z i I : X ~".split(" ");
+const conj = "St s| So Ug Gt Gb ;t ;y ;g Hh B Bj Kt k| k|m Dk Da Nn Q 4 2 R5 > cy{ wd{ sd{ k{".split(" ");
+const pv = (k: string) => dsp(clean(conv(k)));
+const title = "Nepali Type cheatsheet: Romanized and Preeti";
+const desc = "Every Romanized spelling and every Preeti key on one page: keyboard layout, vowel table, half letters and conjuncts.";
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{title}</title>
+<meta name="description" content={desc}>
+<link rel="canonical" href={url}>
+<meta property="og:type" content="article">
+<meta property="og:url" content={url}>
+<meta property="og:title" content={title}>
+<meta property="og:description" content={desc}>
+<meta property="og:image" content={new URL("/og.png", site).href}>
+<meta name="theme-color" content="#faf8f5">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<script is:inline>
+try{const t=localStorage.getItem("nw-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}
+</script>
+<style>
+:global(html),:global(body){height:auto}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px 48px}
+.top{position:sticky;top:0;z-index:3;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;padding-top:max(10px,env(safe-area-inset-top))}
+.top .in{max-width:980px;margin:0 auto;padding:0 16px;display:flex;align-items:center;gap:10px}
+.logo{width:32px;height:32px;border-radius:9px;background:var(--ac);color:var(--ac-fg);display:grid;place-items:center;font-size:20px;font-weight:700;flex:none;text-decoration:none}
+.top b{flex:1;font-size:17px}
+.btn{height:34px;padding:0 14px;border-radius:17px;background:var(--ac);color:var(--ac-fg);font-weight:600;font-size:14px;display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap}
+nav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;max-width:980px;margin:8px auto 0;padding:0 16px}
+nav::-webkit-scrollbar{display:none}
+nav a{flex:none;padding:5px 12px;border-radius:14px;background:var(--surface2);color:var(--fg);text-decoration:none;font-size:13.5px;font-weight:550}
+h1{font-size:clamp(26px,5vw,38px);letter-spacing:-.02em;margin:28px 0 4px}
+.lead{color:var(--mut);margin:0 0 8px;font-size:16px}
+h2{font-size:22px;margin:36px 0 4px;scroll-margin-top:110px;display:flex;align-items:center;gap:10px}
+h2 span{font-size:12px;font-weight:600;color:var(--ac);background:var(--ac-soft);padding:2px 9px;border-radius:10px}
+h3{font-size:15px;margin:20px 0 8px;color:var(--mut);font-weight:600}
+.note{color:var(--mut);margin:4px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.c{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 6px;text-align:center}
+.c .d{display:block;font-size:28px;line-height:1.3}
+.c small{display:block;color:var(--mut);font-size:12px}
+kbd{font:12px ui-monospace,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--surface2);color:var(--fg);display:inline-block;margin:1px}
+.ex{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.ex div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:10px}
+.ex .d{font-size:24px;flex:1}
+.ex code{color:var(--mut);font-size:12px}
+.kb{background:var(--surface2);border-radius:16px;padding:10px}
+@media (max-width:640px){.kb .row{flex-wrap:wrap;padding-left:0!important}.kb .k{flex:0 0 calc((100% - 30px)/7);height:60px}.kb .row+.row{margin-top:10px}}
+.row{display:flex;gap:5px;margin-bottom:5px}
+.row:nth-child(2){padding-left:3%}.row:nth-child(3){padding-left:6%}.row:nth-child(4){padding-left:10%}
+.k{flex:1;min-width:0;background:var(--key);border-radius:9px;box-shadow:0 1px 0 var(--keyline),0 0 0 1px var(--line) inset;padding:3px 4px 4px;position:relative;height:66px}
+.k i{position:absolute;top:2px;left:5px;font:normal 10px ui-monospace,monospace;color:var(--mut)}
+.k .s{position:absolute;top:3px;right:5px;font-size:15px;color:var(--blue)}
+.k .n{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:23px}
+.k.m .n{font:11px system-ui;color:var(--ac);bottom:10px}
+.leg{display:flex;gap:14px;flex-wrap:wrap;color:var(--mut);font-size:13px;margin:8px 2px 0}
+.leg b{color:var(--blue)}
+ul{padding-left:20px}li{margin:6px 0}
+footer{margin-top:40px;color:var(--mut);font-size:13px}
+footer a{color:var(--ac)}
+@media print{.top,nav{display:none}.wrap{max-width:none}.c,.ex div,.k{break-inside:avoid}h2{break-after:avoid}.vr{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header class="top">
+ <div class="in"><a class="logo d" href="/" aria-label="Back to Nepali Type">क</a><b>Cheatsheet</b><a class="btn" href="/">Start typing →</a></div>
+ <nav aria-label="Sections"><a href="#roman">Romanized</a><a href="#layout">Preeti keyboard</a><a href="#table">Vowel table</a><a href="#half">Half letters</a><a href="#tips">Tips</a></nav>
+</header>
+<main class="wrap">
+ <h1>Nepali typing cheatsheet</h1>
+ <p class="lead">Two ways to type in <a href="/" style="color:var(--ac)">Nepali Type</a>: <b>Romanized</b> (type how it sounds) and <b>Preeti keys</b> (the classic layout).</p>
+
+ <h2 id="roman">Romanized <span>ka → क</span></h2>
+ <p class="note">A consonant alone keeps its <b>a</b> sound. Two consonants in a row join: <kbd>kt</kbd> क्त. Capitals matter: <kbd>t</kbd> त, <kbd>T</kbd> ट.</p>
+ <h3>Vowels: on their own, and after a consonant</h3>
+ <div class="grid">{vowels.map(v => <div class="c"><span class="d">{v.u} · {v.k}</span><small>{v.ks.map(k => <kbd>{k}</kbd>)}</small></div>)}</div>
+ <h3>Consonants</h3>
+ <div class="grid">{cons.map(([u, ks]) => <div class="c"><span class="d">{u}</span><small>{ks.map(k => <kbd>{k}</kbd>)}</small></div>)}</div>
+ <h3>Signs</h3>
+ <div class="grid">{signs.map(([k, u, n]) => <div class="c"><span class="d">{sign(u)}</span><small><kbd>{k}</kbd> {n}</small></div>)}</div>
+ <p class="note"><kbd>n</kbd> before k, kh, g or gh becomes ङ: <kbd>gangaa</kbd> गङ्गा.</p>
+ <h3>Examples</h3>
+ <div class="ex">{words.map(w => <div><kbd>{w}</kbd><span class="d">{roman(w).u}</span><code>{toPreeti(roman(w).u)}</code></div>)}</div>
+ <p class="note">The grey code is the same word as Preeti keystrokes.</p>
+
+ <h2 id="layout">Preeti keyboard <span>s → क</span></h2>
+ <p class="note">Each key is one Preeti glyph. Bottom: the key alone. Top right, in blue: with Shift.</p>
+ <div class="kb">{R.map(([a]) => <div class="row">{[...a].map(c => <div class={"k d" + (c === "m" ? " m" : "")}><i>{c}</i><span class="s">{glyph(SH2[c])}</span><span class="n">{glyph(c)}</span></div>)}</div>)}</div>
+ <div class="leg"><span><b>Blue</b> = Shift layer</span><span><kbd>m</kbd> = hook (km फ, pm ऊ, em झ)</span><span>US QWERTY</span></div>
+
+ <h2 id="table">Vowel table <span>बाह्रखरी</span></h2>
+ <p class="note">Every Preeti letter with every vowel sign, and the keys to type it.</p>
+ <div class="vt">{CN.map(k => <div class="vr"><b class="d">{pv(k)}</b><div class="vc">{MK.map((_, i) => <div><span class="d">{pv(cell(k, i))}</span><kbd>{cell(k, i)}</kbd></div>)}</div></div>)}</div>
+
+ <h2 id="half">Half letters and conjuncts</h2>
+ <p class="note">Half letters join the next letter: <kbd>S</kbd> then <kbd>t</kbd> gives क्त.</p>
+ <div class="grid">{half.map(k => <div class="c" style="background:var(--half)"><span class="d">{pv(k)}</span><small><kbd>{k}</kbd></small></div>)}</div>
+ <h3>Common conjuncts</h3>
+ <div class="grid">{conj.map(k => <div class="c"><span class="d">{pv(k)}</span><small><kbd>{k}</kbd></small></div>)}</div>
+
+ <h2 id="tips">Tips</h2>
+ <ul>
+  <li><b>ि</b> is typed <i>before</i> its letter in Preeti: <kbd>l</kbd><kbd>s</kbd> कि. The app puts it in the right Unicode order.</li>
+  <li><b>Reph र्</b> is typed <i>after</i> its letter: <kbd>c</kbd><kbd>y</kbd><kbd>{"{"}</kbd> अर्थ.</li>
+  <li><b>m</b> is a hook, not a letter: <kbd>km</kbd> फ, <kbd>pm</kbd> ऊ, <kbd>em</kbd> झ, <kbd>qm</kbd> क्र, <kbd>Qm</kbd> क्त. For म type <kbd>d</kbd>.</li>
+  <li><kbd>0f</kbd>, <kbd>if</kbd> and <kbd>If</kbd> are single letters: ण, ष, क्ष.</li>
+  <li>Press <b>★ Save</b> in the app to keep a word. Saved words appear in the suggestion bar.</li>
+ </ul>
+ <footer>Nepali Type is free, works offline and keeps everything on your device. <a href="/">Start typing →</a></footer>
+</main>
+<script>
+if(import.meta.env.PROD&&"serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});
+</script>
+</body>
+</html>

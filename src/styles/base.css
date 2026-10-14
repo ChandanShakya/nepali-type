@@ -1,0 +1,23 @@
+/* Shared by every page: theme tokens and base elements */
+@font-face{font-family:PreetiL;src:local("Preeti"),local("Preeti Normal")}
+:root{--bg:#faf8f5;--surface:#fff;--surface2:#f3f0ea;--fg:#1d1b18;--mut:#78736a;--line:#e7e2d9;--ac:#c8102e;--ac-fg:#fff;--ac-soft:#fbe7ea;--blue:#1f4fb8;--half:#e8eefb;--key:#fff;--keyline:#d9d3c8;--shadow:0 1px 2px rgba(40,30,20,.06),0 4px 16px rgba(40,30,20,.06);color-scheme:light}
+:root[data-theme="dark"]{--bg:#121212;--surface:#1c1c1c;--surface2:#232323;--fg:#efece6;--mut:#9b968d;--line:#2e2d2b;--ac:#ff5a6e;--ac-fg:#1a0005;--ac-soft:#3a1a1f;--blue:#8fb0ff;--half:#1e2a42;--key:#262626;--keyline:#151515;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.25);color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121212;--surface:#1c1c1c;--surface2:#232323;--fg:#efece6;--mut:#9b968d;--line:#2e2d2b;--ac:#ff5a6e;--ac-fg:#1a0005;--ac-soft:#3a1a1f;--blue:#8fb0ff;--half:#1e2a42;--key:#262626;--keyline:#151515;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.25);color-scheme:dark}}
+[hidden]{display:none!important}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;touch-action:manipulation}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.d{font-family:"Noto Sans Devanagari","Nirmala UI","Mangal","Kohinoor Devanagari",sans-serif}
+/* vowel table (बाह्रखरी): one card per letter, cells wrap to the screen width */
+.vt{display:flex;flex-direction:column;gap:6px}
+.vr{display:flex;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px}
+.vr>b{flex:none;width:44px;display:grid;place-items:center;font-size:26px;background:var(--surface2);border-radius:8px}
+.vc{flex:1;min-width:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:4px}
+.vc>*{text-align:center;padding:3px 0;border-radius:8px;font:inherit;color:inherit;background:none;border:0}
+.vc .d{display:block;font-size:21px;line-height:1.3}
+.vc kbd{font-size:10px;white-space:nowrap}
+button.vc>*:hover,.vc>button:hover{background:var(--surface2)}
+@media (max-width:560px){.vr{flex-direction:column;gap:4px}.vr>b{width:auto;height:32px;font-size:22px}.vc{grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:2px}.vc .d{font-size:19px}}

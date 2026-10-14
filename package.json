@@ -1,0 +1,21 @@
+{
+  "name": "nepali-type",
+  "version": "1.0.0",
+  "description": "Type Nepali in Unicode and Preeti: Romanized (ka → क) or the classic Preeti layout. Installable, works offline.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "homepage": "https://nepali-type.chandanshakya.com.np",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "node test.mjs"
+  },
+  "dependencies": {
+    "astro": "7.3.8"
+  }
+}

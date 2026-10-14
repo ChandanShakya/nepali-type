@@ -2,7 +2,7 @@
 
 Type Nepali the easy way, in the browser, on desktop or Android. Works offline and installs as an app.
 
-**Live:** https://nepali-type.chandanshakya.com.np
+**Live:** https://nepali-type.chandanshakya.com.np (also at https://nepali-type.pages.dev)
 
 - **Romanized mode:** type how it sounds. `namaste` → नमस्ते, `kaa` → का, `kt` → क्त. Works with any phone keyboard.
 - **Built-in dictionary:** about 800 common words, offline. Loose spellings find the right word (`nepal` → नेपाल, `bikas` → विकास). Tap the blue suggestion or press <kbd>Tab</kbd>. In Preeti mode it finishes the word you are typing.
@@ -70,7 +70,7 @@ test.mjs                assertions for the converters
 - Build command: `npm run build`
 - Output directory: `dist`
 - Serve it over HTTPS. Service workers and the Install button need it.
-- If you deploy to a domain other than `nepali-type.chandanshakya.com.np`, change `site` in `astro.config.mjs`. Canonical and Open Graph URLs come from it.
+- The site runs on Cloudflare Pages at `nepali-type.pages.dev`, with `nepali-type.chandanshakya.com.np` as its custom domain. Canonical and Open Graph URLs come from `site` in `astro.config.mjs`, so search engines treat the custom domain as the main address. If you move domains, change `site`.
 - Don't let a CDN cache `sw.js` for long. Browsers check it for updates. `public/_headers` sets this (and long caching for hashed assets) on Cloudflare Pages and Netlify.
 
 ## Adding dictionary words

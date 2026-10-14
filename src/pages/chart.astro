@@ -1,6 +1,7 @@
 ---
 // Printable cheatsheet. Everything is computed at build time from the same converter the app uses.
 import "../styles/base.css";
+import {REPO, GITHUB_ICON} from "../data/site.js";
 import {R,SH2,P,conv,clean,roman,toPreeti,ROMAN} from "../scripts/nepali.js";
 
 const site = Astro.site?.href ?? "/";
@@ -26,8 +27,25 @@ const cell = (k: string, i: number) => (k === "/" && i === 4 ? "?" : k === "/" &
 const half = "S V U R H T Y W G K A E D N J Z i I : X ~".split(" ");
 const conj = "St s| So Ug Gt Gb ;t ;y ;g Hh B Bj Kt k| k|m Dk Da Nn Q 4 2 R5 > cy{ wd{ sd{ k{".split(" ");
 const pv = (k: string) => dsp(clean(conv(k)));
-const title = "Nepali Type cheatsheet: Romanized and Devanagari font keys";
-const desc = "Every Romanized spelling and every Devanagari font key on one page: keyboard layout, vowel table, half letters and conjuncts.";
+const title = "Nepali Typing Cheatsheet & Guide: Romanized Nepali and Preeti Keyboard Layout";
+const desc = "How to type Nepali: every Romanized spelling, the full Preeti / Devanagari font keyboard layout, the vowel table (बाह्रखरी), half letters, conjuncts and a guide to every Nepali Type feature.";
+// every feature, documented once here: [title, how it works]
+const features: [string, string][] = [
+  ["Romanized typing", "Type Nepali the way it sounds in English letters: <kbd>ka</kbd> क, <kbd>kaa</kbd> का, <kbd>namaste</kbd> नमस्ते. A consonant alone keeps its <b>a</b> sound and two consonants join (<kbd>kt</kbd> क्त). Works with any phone keyboard."],
+  ["Dictionary suggestions", "About 800 common words are built in and work offline. Loose spellings still find the word: <kbd>nepal</kbd> → नेपाल, <kbd>bikas</kbd> → विकास, <kbd>kathmandu</kbd> → काठमाडौं. Tap a blue suggestion, or press <kbd>Tab</kbd> on a computer. In font keys mode the dictionary finishes the word you are typing."],
+  ["Live hints", "The bar above the keyboard shows what each key did and what you can type next: after <kbd>k</kbd> it offers ख, का, कि and the rest. Tap a hint to type it."],
+  ["Devanagari font keys (Preeti layout)", "The classic Devanagari font keyboard, keystroke for keystroke, as in Word or LibreOffice with the Preeti font. Use the on-screen keyboard or a physical one. <b>ि</b> is typed before its letter and reph र् after; the app puts them in the right Unicode order. Shift: tap once, twice to lock."],
+  ["Movable cursor", "In font keys mode you can insert anywhere: <b>tap the text</b> to put the cursor there, <b>drag the space bar</b> left or right to move it (like Gboard), or use the arrow keys, Home, End and Delete on a keyboard. Typing, ⌫, hints and dictionary words all work at the cursor."],
+  ["Three outputs, side by side", "Every word appears as Unicode (for the web, phones and modern apps), as Romanized spelling (to learn it or type it again) and as Devanagari font keystrokes (to paste into documents set in Preeti)."],
+  ["Same text in both modes", "Switching between Romanized and font keys converts what you typed, so you never lose your text."],
+  ["Copy any box", "Each box has its own copy button in the top-right corner. A tick confirms which one was copied."],
+  ["Saved words", "Press <b>★ Save</b> to keep the word before the cursor. Saved words appear in the suggestion bar and under <b>★ Saved</b>, where you can tap to type them or × to remove them. They stay on your device."],
+  ["Chart and this cheatsheet", "<b>Chart</b> in the bottom row opens a quick reference inside the app; this page is the full printable version."],
+  ["More room", "Hide the top bar with <b>⌃</b>. Card titles disappear and buttons become icons. Bring it back with <b>⌄</b> in the bottom row."],
+  ["Dark mode", "Follows your system until you pick one with the moon button."],
+  ["Install and offline", "Install it from the browser (Chrome, Edge, Android: Install button; iPhone: Share → Add to Home Screen). After the first visit it works with no internet."],
+  ["Private", "Everything runs in your browser. Text, saved words and settings never leave your device. No account, no tracking."],
+];
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -69,7 +87,7 @@ h3{font-size:15px;margin:20px 0 8px;color:var(--mut);font-weight:600}
 .c{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 6px;text-align:center}
 .c .d{display:block;font-size:28px;line-height:1.3}
 .c small{display:block;color:var(--mut);font-size:12px}
-kbd{font:12px ui-monospace,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--surface2);color:var(--fg);display:inline-block;margin:1px}
+:global(kbd){font:12px ui-monospace,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--surface2);color:var(--fg);display:inline-block;margin:1px}
 .ex{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
 .ex div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:10px}
 .ex .d{font-size:24px;flex:1}
@@ -88,17 +106,32 @@ kbd{font:12px ui-monospace,monospace;border:1px solid var(--line);border-bottom-
 ul{padding-left:20px}li{margin:6px 0}
 footer{margin-top:40px;color:var(--mut);font-size:13px}
 footer a{color:var(--ac)}
-@media print{.top,nav{display:none}.wrap{max-width:none}.c,.ex div,.k{break-inside:avoid}h2{break-after:avoid}.vr{break-inside:avoid}}
+.gl{width:34px;height:34px;display:grid;place-items:center;color:var(--fg)}
+.gl .gh{width:20px;height:20px;fill:currentColor}
+.demo{margin:18px 0 6px;text-align:center}
+.demo video{width:auto;max-width:100%;height:min(70vh,640px);border-radius:16px;background:#0e0e0f;box-shadow:var(--shadow)}
+.demo figcaption{color:var(--mut);font-size:13px;margin-top:6px}
+.ft{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin:8px 0}
+.ft div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.ft dt{font-weight:700;margin-bottom:4px}
+.ft dd{margin:0;color:var(--mut);font-size:14.5px;line-height:1.5}
+/* off-screen sections are laid out only when scrolled near: the page has ~2,300 Devanagari elements */
+.vr,.ft div,.grid,.ex,.kb{content-visibility:auto;contain-intrinsic-size:auto 160px}
+@media print{.demo{display:none}.vr,.ft div,.grid,.ex,.kb{content-visibility:visible}.top,nav{display:none}.wrap{max-width:none}.c,.ex div,.k{break-inside:avoid}h2{break-after:avoid}.vr{break-inside:avoid}}
 </style>
 </head>
 <body>
 <header class="top">
- <div class="in"><a class="logo d" href="/" aria-label="Back to Nepali Type">क</a><b>Cheatsheet</b><a class="btn" href="/">Start typing →</a></div>
- <nav aria-label="Sections"><a href="#roman">Romanized</a><a href="#layout">Font keyboard</a><a href="#table">Vowel table</a><a href="#half">Half letters</a><a href="#tips">Tips</a></nav>
+ <div class="in"><a class="logo d" href="/" aria-label="Back to Nepali Type">क</a><b>Cheatsheet</b><a class="gl" href={REPO} target="_blank" rel="noopener" aria-label="Source code on GitHub" title="Source code on GitHub"><Fragment set:html={GITHUB_ICON}/></a><a class="btn" href="/">Start typing →</a></div>
+ <nav aria-label="Sections"><a href="#features">Features</a><a href="#roman">Romanized</a><a href="#layout">Font keyboard</a><a href="#table">Vowel table</a><a href="#half">Half letters</a><a href="#tips">Tips</a></nav>
 </header>
 <main class="wrap">
  <h1>Nepali typing cheatsheet</h1>
  <p class="lead">Two ways to type in <a href="/" style="color:var(--ac)">Nepali Type</a>: <b>Romanized</b> (type how it sounds) and <b>Font keys</b> (the classic Devanagari font layout, as used by Preeti).</p>
+ <figure class="demo"><video src="/demo.mp4" poster="/demo.webp" controls muted playsinline preload="none" width="720" height="1280" aria-label="Nepali Type demo video"></video><figcaption>Every feature in under a minute.</figcaption></figure>
+
+ <h2 id="features">Features <span>how to use</span></h2>
+ <dl class="ft">{features.map(([t, d]) => <div><dt>{t}</dt><dd set:html={d}></dd></div>)}</dl>
 
  <h2 id="roman">Romanized <span>ka → क</span></h2>
  <p class="note">A consonant alone keeps its <b>a</b> sound. Two consonants in a row join: <kbd>kt</kbd> क्त. Capitals matter: <kbd>t</kbd> त, <kbd>T</kbd> ट.</p>
@@ -136,7 +169,7 @@ footer a{color:var(--ac)}
   <li><kbd>0f</kbd>, <kbd>if</kbd> and <kbd>If</kbd> are single letters: ण, ष, क्ष.</li>
   <li>Press <b>★ Save</b> in the app to keep a word. Saved words appear in the suggestion bar.</li>
  </ul>
- <footer>Nepali Type is free, works offline and keeps everything on your device. <a href="/">Start typing →</a></footer>
+ <footer>Nepali Type is free, open source, works offline and keeps everything on your device. <a href="/">Start typing →</a> · <a href={REPO} target="_blank" rel="noopener">Source on GitHub</a></footer>
 </main>
 <script>
 if(import.meta.env.PROD&&"serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});

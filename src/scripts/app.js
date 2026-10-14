@@ -1,7 +1,9 @@
 import {R,SH,SH2,KEYS,P,conv,clean,toPreeti,toRoman,roman,ROMAN,makeDict} from "./nepali.js";
 import words from "../data/words.txt?raw";
 
-const dict=makeDict(words);
+// the dictionary is built on first use (or when the browser is idle), not during page load
+let dictCache;const dict=()=>dictCache||(dictCache=makeDict(words));
+(window.requestIdleCallback||setTimeout)(()=>dict());
 
 const $=s=>document.querySelector(s);
 // localStorage can throw (private mode, blocked storage): the app must still work without it
@@ -97,7 +99,7 @@ function drawPreeti(last){
  sg.innerHTML="";
  // dictionary: finish the word being typed
  const wu=w?clean(conv(w)):"";
- if(/^[\u0900-\u097f]+$/.test(wu))dict.prefix(wu).forEach(x=>sg.appendChild(chip("w",x.u,ks(toPreeti(x.u).slice(0,8)),()=>{edit(w.length,toPreeti(x.u)+" ");draw()})));
+ if(/^[\u0900-\u097f]+$/.test(wu))dict().prefix(wu).forEach(x=>sg.appendChild(chip("w",x.u,ks(toPreeti(x.u).slice(0,8)),()=>{edit(w.length,toPreeti(x.u)+" ");draw()})));
  combos().forEach(c=>sg.appendChild(chip("c",dsp(c.r),ks(c.n),()=>add(c.n))));
  if(/[क-ह]$/.test(clean(conv(before())))){
   const st=lpos(w);
@@ -127,7 +129,7 @@ function drawRoman(){
  const wu=roman(word).u,lu=roman(last[0]).u;
  info.innerHTML="<kbd>"+esc(last[0])+"</kbd> → <b class=d>"+(last[1]==="v"?lu+" / ◌"+(ROMAN.V[last[0]][1]||"(a)"):sign(lu))+"</b> &nbsp;word <b class=d>"+dsp(wu)+"</b>";
  // dictionary words that sound like what was typed (nepal -> नेपाल), blue
- const dw=dict.roman(word).filter(x=>x.u!==wu);firstWord=dw[0]||null;
+ const dw=dict().roman(word).filter(x=>x.u!==wu);firstWord=dw[0]||null;
  dw.forEach(x=>sg.appendChild(chip("w",x.u,"<kbd>"+esc(x.r)+"</kbd>",()=>pick(x.r))));
  const seen=new Set([wu]),opt=(suf,cls)=>{const r=roman(word+suf).u;if(seen.has(r))return;seen.add(r);sg.appendChild(chip(cls,dsp(r),"<kbd>+"+esc(suf)+"</kbd>",()=>insert(suf)))};
  // longer tokens that start with what was just typed: k -> kh, s -> sh, a -> aa
@@ -150,8 +152,7 @@ function carry(m){
  else rin.value=clean(conv(buf)).split(/(\s+)/).map(w=>/\S/.test(w)?toRoman(w)??w:w).join("");
 }
 function setMode(m){
- mode=m;store.set("nw-mode",m);document.body.classList.toggle("roman",m==="roman");
- rin.hidden=m!=="roman";
+ mode=m;store.set("nw-mode",m);document.documentElement.classList.toggle("roman",m==="roman");
  const mb=$("#mode");mb.innerHTML=m==="roman"?"⌨ <span class=tx>Font keys</span><span class=d aria-hidden=true>&nbsp;s→क</span>":"ABC";
  mb.setAttribute("aria-label",m==="roman"?"Switch to Devanagari font keys":"Switch to Romanized");mb.title=mb.getAttribute("aria-label");
  document.querySelectorAll("[data-mode]").forEach(e=>e.hidden=e.dataset.mode!==m);
@@ -246,6 +247,13 @@ function tapOffset(el,e){
 out.addEventListener("click",e=>{if(mode!=="preeti"||!buf)return;const o=tapOffset(out,e);if(o!=null)moveTo(caretFrom(conv(buf),o))});
 $("#pre").addEventListener("click",e=>{if(mode!=="preeti"||!buf)return;const o=tapOffset($("#pre"),e);if(o!=null)moveTo(o)});
 
+// welcome video: once on the first visit, then from Help
+const intro=$("#intro"),iv=intro.querySelector("video");
+// marked as seen when shown, so it never comes back on its own even if the tab is closed with it open
+const openIntro=()=>{intro.showModal();store.set("nw-intro","1");iv.play().catch(()=>{})};
+intro.addEventListener("close",()=>iv.pause());
+if(!store.get("nw-intro"))openIntro();
+
 // top bar can be hidden for more room; remembered
 const setHd=on=>{document.documentElement.classList.toggle("hd-off",!on);store.set("nw-hd",on?"1":"0")};
 $("#hidehd").onclick=()=>setHd(false);$("#showhd").onclick=()=>{buzz();setHd(true)};
@@ -276,9 +284,12 @@ function drawFavs(){
   e=>{if(e.target.classList.contains("x")){favs.splice(i,1);saveFavs();draw()}else{document.body.classList.remove("open");putWord(f)}}]));
 }
 drawFavs();
+// chart contents are built the first time the sheet opens, keeping page load light
+let built=false;
+function buildChart(){if(built)return;built=true;
 // Romanized chart
 const rchips=list=>grid("r",list.map(k=>["<span class=d>"+sign(roman(k).u)+"</span><kbd>"+esc(k)+"</kbd>",()=>{document.body.classList.remove("open");insert(k)}]));
-note("r","Type how it sounds. A consonant alone keeps its <b>a</b> sound; two consonants join: <kbd>kt</kbd> क्त. Capitals matter: <kbd>t</kbd> त <kbd>T</kbd> ट. Blue suggestions come from the built-in dictionary of "+dict.size+" words, so <kbd>nepal</kbd> still finds नेपाल.");
+note("r","Type how it sounds. A consonant alone keeps its <b>a</b> sound; two consonants join: <kbd>kt</kbd> क्त. Capitals matter: <kbd>t</kbd> त <kbd>T</kbd> ट. Blue suggestions come from the built-in dictionary of "+dict().size+" words, so <kbd>nepal</kbd> still finds नेपाल.");
 rchips(Object.keys(ROMAN.V));
 note("r","Consonants");rchips(Object.keys(ROMAN.C));
 note("r","Signs: <kbd>M</kbd> ं &nbsp;<kbd>~</kbd> ँ &nbsp;<kbd>H</kbd> ः &nbsp;<kbd>\\</kbd> halant ् (word-final: <kbd>chhan\\</kbd> छन्) &nbsp;<kbd>.</kbd> । &nbsp;<kbd>..</kbd> . &nbsp;digits → ०-९. <kbd>n</kbd> before k/kh/g/gh becomes ङ: <kbd>gangaa</kbd> गङ्गा. <kbd>'</kbd> keeps letters apart: <kbd>ra'aa</kbd> रआ.");
@@ -300,8 +311,10 @@ const cell=(k,i)=>k==="/"&&i===4?"?":k==="/"&&i===5?"¿":MK[i][0]+k+MK[i][1];
 $("#p-b").innerHTML="<p class=nt>Every letter with every vowel sign. Tap one to type it.</p><div class=vt>"+CN.split(" ").map(k=>
  "<div class=vr><b class=d>"+clean(conv(k))+"</b><div class=vc>"+MK.map((_,i)=>{const c=cell(k,i);return"<button data-k=\""+esc(c)+"\"><span class=d>"+clean(conv(c))+"</span><kbd>"+esc(c)+"</kbd></button>"}).join("")+"</div></div>").join("")+"</div>";
 $("#p-b").onclick=e=>{const b=e.target.closest("[data-k]");if(b)add(b.dataset.k)};
-$("#p-i").innerHTML="<ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li>Switch modes with the <b>ABC / ⌨</b> key at the bottom left. <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Font keys</b> works like typing with a Devanagari font in Word or LibreOffice: each key is one glyph. It uses the <b>Preeti</b> layout, the most widely used one, so the copied font text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> by tapping the text, dragging the space bar, or with the arrow keys. Typing and ⌫ work at the cursor.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li><b>Blue keys</b> are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline.</li></ul>";
-const openSheet=id=>{document.body.classList.add("open");show(id)};
+$("#p-i").innerHTML="<p class=nt><button class='bt p' id=watch>▶ Watch the demo</button> <a class=bt href=/chart/>Full cheatsheet</a> <a class=bt href='"+$(".ib[href*=github]").href+"' target=_blank rel=noopener>GitHub</a></p><ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li>Switch modes with the <b>ABC / ⌨</b> key at the bottom left. <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Font keys</b> works like typing with a Devanagari font in Word or LibreOffice: each key is one glyph. It uses the <b>Preeti</b> layout, the most widely used one, so the copied font text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> by tapping the text, dragging the space bar, or with the arrow keys. Typing and ⌫ work at the cursor.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li><b>Blue keys</b> are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline.</li></ul>";
+$("#watch").onclick=()=>{document.body.classList.remove("open");openIntro()};
+}
+const openSheet=id=>{buildChart();document.body.classList.add("open");show(id)};
 $("#chart").onclick=()=>{buzz();openSheet(mode==="roman"?"r":"v")};$("#saved").onclick=()=>{buzz();openSheet("f")};
 $("#x").onclick=$("#bd").onclick=()=>document.body.classList.remove("open");
 setMode(mode);

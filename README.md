@@ -1,18 +1,32 @@
 # Nepali Type
 
-Type Nepali the easy way, in the browser, on desktop or Android. Works offline and installs as an app.
+Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali (`ka` → क) with dictionary suggestions, or use the classic Preeti Devanagari font layout. Unicode, Romanized and Preeti text side by side. Works offline and installs as an app.
 
-**Live:** https://nepali-type.chandanshakya.com.np (also at https://nepali-type.pages.dev)
+**Live:** https://nepali-type.chandanshakya.com.np (also at https://nepali-type.pages.dev) · **Guide and cheatsheet:** [/chart/](https://nepali-type.chandanshakya.com.np/chart/)
 
-- **Romanized mode:** type how it sounds. `namaste` → नमस्ते, `kaa` → का, `kt` → क्त. Works with any phone keyboard.
-- **Built-in dictionary:** about 800 common words, offline. Loose spellings find the right word (`nepal` → नेपाल, `bikas` → विकास). Tap the blue suggestion or press <kbd>Tab</kbd>. In font keys mode it finishes the word you are typing.
-- **Font keys mode:** the classic Devanagari font layout, keystroke for keystroke, as it behaves in Word or LibreOffice. It uses the Preeti layout, the most widely used legacy Devanagari font. Comes with an on-screen keyboard and a movable cursor: tap the text, drag the space bar, or use the arrow keys to insert anywhere.
-- **Both outputs at once:** every mode shows Unicode Devanagari and the matching Devanagari font keystrokes. Copy either one.
-- **Live hints:** the bar above the keyboard shows what each key did and what you can type next.
-- **Keyboard-style layout:** the mode switch, Chart and ★ Saved sit in the bottom row next to space. The top bar can be hidden.
-- **Saved words:** star a word and it stays on your device, ready in the suggestion bar and under **★ Saved**.
-- **Chart and cheatsheet:** a quick chart inside the app, plus a full printable cheatsheet at [`/chart/`](https://nepali-type.chandanshakya.com.np/chart/) with the font keyboard, the vowel table, half letters and every Romanized spelling.
-- **Light and dark themes**, an installable PWA, and offline use after the first visit.
+[![Watch the 46-second demo](public/demo.jpg)](https://nepali-type.pages.dev/demo.mp4)
+
+*Tap the image to watch the demo video.*
+
+## Features
+
+| Feature | How to use it |
+|---|---|
+| **Romanized typing** | Type how it sounds: `ka` क, `kaa` का, `namaste` नमस्ते. A consonant alone keeps its *a* sound, and two consonants join (`kt` क्त). Works with any phone keyboard. |
+| **Dictionary suggestions** | About 800 common words, built in and offline. Loose spellings still find the word: `nepal` → नेपाल, `bikas` → विकास, `kathmandu` → काठमाडौं. Tap the blue suggestion, or press <kbd>Tab</kbd> on a computer. In font keys mode it finishes the word you're typing. |
+| **Live hints** | The bar above the keyboard shows what each key did and what can come next. After `k` it offers ख, का, कि and so on. Tap a hint to type it. |
+| **Devanagari font keys (Preeti layout)** | The classic font keyboard, keystroke for keystroke, as in Word or LibreOffice with the Preeti font. Use the on-screen keyboard or a physical one. ि is typed before its letter and reph र् after it; the app puts both in the right Unicode order. |
+| **Movable cursor** | In font keys mode you can insert anywhere: **tap the text**, **drag the space bar** left or right (like Gboard), or use the arrow keys, Home, End and Delete. Typing, ⌫, hints and dictionary words all work at the cursor. |
+| **Three outputs** | Unicode (for the web and modern apps), Romanized spelling (to learn a word or type it again) and Devanagari font keystrokes (to paste into Preeti documents). |
+| **Same text in both modes** | Switching between Romanized and font keys converts your text, so nothing is lost. |
+| **Copy any box** | Each box has a copy button in its top-right corner. A tick shows which one was copied. |
+| **Saved words** | **★ Save** keeps the word before the cursor. Saved words show up in the suggestion bar and under **★ Saved** (tap to type, × to remove). |
+| **Chart and cheatsheet** | **Chart** in the bottom row opens a quick reference. [`/chart/`](https://nepali-type.chandanshakya.com.np/chart/) is the full, printable guide: the font keyboard, the vowel table (बाह्रखरी), half letters, conjuncts and every Romanized spelling. |
+| **More room** | Hide the top bar with **⌃**. Card titles disappear and the buttons become icons. Bring the bar back with **⌄** in the bottom row. |
+| **Welcome video** | Plays once on your first visit. Watch it again from Chart → Help → ▶ Watch the demo. |
+| **Dark mode** | Follows your system until you choose with the moon button. |
+| **Install and offline** | Install button in Chrome, Edge and Android; on iPhone use Share → Add to Home Screen. After the first visit it works with no internet (the demo video needs a connection). |
+| **Private** | Everything runs in your browser. Text, saved words and settings stay on your device. No account, no tracking. |
 
 ## Romanized cheat sheet
 
@@ -49,7 +63,8 @@ npm run preview   # serve dist/ locally
 
 ```
 src/
-  pages/index.astro     the typing app
+  pages/index.astro     the typing app, welcome popup, SEO metadata
+  data/site.js          GitHub repo link and icon, shared by both pages
   pages/chart.astro     printable cheatsheet, rendered at build time
   styles/base.css       theme tokens shared by both pages
   scripts/nepali.js     conversion logic (Preeti ⇄ Unicode, Romanized → Unicode), no DOM
@@ -59,6 +74,8 @@ public/
   sw.js                 service worker; the build fills in the file list and version
   manifest.webmanifest  PWA manifest
   icon*, og.png         icons and social preview image
+  demo.mp4, demo.jpg    demo video (welcome popup, cheatsheet, README) and its poster
+  sitemap.xml, robots.txt, _headers   SEO and hosting headers
 astro.config.mjs        site URL and the precache build hook
 test.mjs                assertions for the converters
 ```

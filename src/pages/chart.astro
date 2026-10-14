@@ -26,8 +26,8 @@ const cell = (k: string, i: number) => (k === "/" && i === 4 ? "?" : k === "/" &
 const half = "S V U R H T Y W G K A E D N J Z i I : X ~".split(" ");
 const conj = "St s| So Ug Gt Gb ;t ;y ;g Hh B Bj Kt k| k|m Dk Da Nn Q 4 2 R5 > cy{ wd{ sd{ k{".split(" ");
 const pv = (k: string) => dsp(clean(conv(k)));
-const title = "Nepali Type cheatsheet: Romanized and Preeti";
-const desc = "Every Romanized spelling and every Preeti key on one page: keyboard layout, vowel table, half letters and conjuncts.";
+const title = "Nepali Type cheatsheet: Romanized and Devanagari font keys";
+const desc = "Every Romanized spelling and every Devanagari font key on one page: keyboard layout, vowel table, half letters and conjuncts.";
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -94,11 +94,11 @@ footer a{color:var(--ac)}
 <body>
 <header class="top">
  <div class="in"><a class="logo d" href="/" aria-label="Back to Nepali Type">क</a><b>Cheatsheet</b><a class="btn" href="/">Start typing →</a></div>
- <nav aria-label="Sections"><a href="#roman">Romanized</a><a href="#layout">Preeti keyboard</a><a href="#table">Vowel table</a><a href="#half">Half letters</a><a href="#tips">Tips</a></nav>
+ <nav aria-label="Sections"><a href="#roman">Romanized</a><a href="#layout">Font keyboard</a><a href="#table">Vowel table</a><a href="#half">Half letters</a><a href="#tips">Tips</a></nav>
 </header>
 <main class="wrap">
  <h1>Nepali typing cheatsheet</h1>
- <p class="lead">Two ways to type in <a href="/" style="color:var(--ac)">Nepali Type</a>: <b>Romanized</b> (type how it sounds) and <b>Preeti keys</b> (the classic layout).</p>
+ <p class="lead">Two ways to type in <a href="/" style="color:var(--ac)">Nepali Type</a>: <b>Romanized</b> (type how it sounds) and <b>Font keys</b> (the classic Devanagari font layout, as used by Preeti).</p>
 
  <h2 id="roman">Romanized <span>ka → क</span></h2>
  <p class="note">A consonant alone keeps its <b>a</b> sound. Two consonants in a row join: <kbd>kt</kbd> क्त. Capitals matter: <kbd>t</kbd> त, <kbd>T</kbd> ट.</p>
@@ -111,15 +111,15 @@ footer a{color:var(--ac)}
  <p class="note"><kbd>n</kbd> before k, kh, g or gh becomes ङ: <kbd>gangaa</kbd> गङ्गा.</p>
  <h3>Examples</h3>
  <div class="ex">{words.map(w => <div><kbd>{w}</kbd><span class="d">{roman(w).u}</span><code>{toPreeti(roman(w).u)}</code></div>)}</div>
- <p class="note">The grey code is the same word as Preeti keystrokes.</p>
+ <p class="note">The grey code is the same word as Devanagari font keystrokes.</p>
 
- <h2 id="layout">Preeti keyboard <span>s → क</span></h2>
- <p class="note">Each key is one Preeti glyph. Bottom: the key alone. Top right, in blue: with Shift.</p>
+ <h2 id="layout">Devanagari font keyboard <span>s → क</span></h2>
+ <p class="note">This is the Preeti layout, the most widely used legacy Devanagari font. Each key is one glyph. Bottom: the key alone. Top right, in blue: with Shift.</p>
  <div class="kb">{R.map(([a]) => <div class="row">{[...a].map(c => <div class={"k d" + (c === "m" ? " m" : "")}><i>{c}</i><span class="s">{glyph(SH2[c])}</span><span class="n">{glyph(c)}</span></div>)}</div>)}</div>
  <div class="leg"><span><b>Blue</b> = Shift layer</span><span><kbd>m</kbd> = hook (km फ, pm ऊ, em झ)</span><span>US QWERTY</span></div>
 
  <h2 id="table">Vowel table <span>बाह्रखरी</span></h2>
- <p class="note">Every Preeti letter with every vowel sign, and the keys to type it.</p>
+ <p class="note">Every letter with every vowel sign, and the keys to type it.</p>
  <div class="vt">{CN.map(k => <div class="vr"><b class="d">{pv(k)}</b><div class="vc">{MK.map((_, i) => <div><span class="d">{pv(cell(k, i))}</span><kbd>{cell(k, i)}</kbd></div>)}</div></div>)}</div>
 
  <h2 id="half">Half letters and conjuncts</h2>
@@ -130,7 +130,7 @@ footer a{color:var(--ac)}
 
  <h2 id="tips">Tips</h2>
  <ul>
-  <li><b>ि</b> is typed <i>before</i> its letter in Preeti: <kbd>l</kbd><kbd>s</kbd> कि. The app puts it in the right Unicode order.</li>
+  <li><b>ि</b> is typed <i>before</i> its letter in font mode: <kbd>l</kbd><kbd>s</kbd> कि. The app puts it in the right Unicode order.</li>
   <li><b>Reph र्</b> is typed <i>after</i> its letter: <kbd>c</kbd><kbd>y</kbd><kbd>{"{"}</kbd> अर्थ.</li>
   <li><b>m</b> is a hook, not a letter: <kbd>km</kbd> फ, <kbd>pm</kbd> ऊ, <kbd>em</kbd> झ, <kbd>qm</kbd> क्र, <kbd>Qm</kbd> क्त. For म type <kbd>d</kbd>.</li>
   <li><kbd>0f</kbd>, <kbd>if</kbd> and <kbd>If</kbd> are single letters: ण, ष, क्ष.</li>

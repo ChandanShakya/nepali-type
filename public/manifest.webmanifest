@@ -1,7 +1,7 @@
 {
   "name": "Nepali Type",
   "short_name": "Nepali Type",
-  "description": "Type Nepali in Unicode and Preeti. Romanized or Preeti layout. Works offline.",
+  "description": "Type Nepali in Unicode and Devanagari font (Preeti layout). Romanized or font keys. Works offline.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

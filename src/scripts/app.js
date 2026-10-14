@@ -20,6 +20,8 @@ const buzz=matchMedia("(pointer:coarse)").matches&&navigator.vibrate?()=>{try{na
 let mode=store.get("nw-mode")==="preeti"?"preeti":"roman";
 const fine=matchMedia("(pointer:fine)").matches;
 let buf=store.get("nw-buf")||"",held=false,shift=0;
+// Preeti mode cursor: an index into buf (the keystrokes), so text can be inserted anywhere
+let cur=buf.length;
 const out=$("#out"),rin=$("#rin"),info=$("#info"),sg=$("#sug");
 rin.value=store.get("nw-rom")||"";
 
@@ -36,31 +38,43 @@ function empty(t){const s=document.createElement("span");s.className="hint0";s.i
 let favs=[];try{favs=JSON.parse(store.get("nw-favs"))||[]}catch(e){}
 const saveFavs=()=>{store.set("nw-favs",JSON.stringify(favs));drawFavs();const n=$("#favn");n.classList.remove("bump");void n.offsetWidth;n.classList.add("bump")};
 // the word the Save button acts on: the last Unicode word typed
-const curWord=()=>(uni().trim().split(/\s+/).pop()||"").replace(/[।.,?!()]+$/,"");
+const curWord=()=>((mode==="preeti"?clean(conv(before())):uni()).trim().split(/\s+/).pop()||"").replace(/[।.,?!()]+$/,"");
 // a saved word goes back in as keystrokes for the current mode
 function putWord(f){
  if(mode==="roman"&&f.r){insert((/\S$/.test(rin.value.slice(0,rin.selectionStart))?" ":"")+f.r)}
- else if(mode==="preeti"){add((/\S$/.test(buf)?" ":"")+toPreeti(f.u))}
+ else if(mode==="preeti"){add((/\S$/.test(before())?" ":"")+toPreeti(f.u))}
  else cp(f.u);
 }
 function favChips(){favs.slice(0,12).forEach(f=>sg.appendChild(chip("f",esc(f.u),"★ saved",()=>putWord(f))))}
 
-function render(u){
+const CARET="<span class=caret></span>";
+function render(u,at=-1){
  // a stray Preeti m has no Unicode letter: show it marked instead of silently dropping it
- const h=dsp(u).split("m").map(esc).join(mode==="preeti"?"<span class=sm title='m only joins प उ भ त्र त्त (k p e q Q)'>m</span>":"m");
- out.innerHTML=h||(mode==="roman"?"Type English sounds above. <b>namaste</b> → नमस्ते":"Tap the keys below, or type on your keyboard as you would with the Preeti font.");
+ const part=x=>dsp(x).split("m").map(esc).join(mode==="preeti"?"<span class=sm title='m only joins प उ भ त्र त्त (k p e q Q)'>m</span>":"m");
+ const h=at<0?part(u):part(u.slice(0,at))+CARET+part(u.slice(at));
+ out.innerHTML=u?h:(mode==="roman"?"Type English sounds above. <b>namaste</b> → नमस्ते":"Tap the keys below, or type on your keyboard as you would with a Devanagari font in Word.");
  out.classList.toggle("e",!u);
  const c=clean(u).trim(),w=c?c.split(/\s+/).length:0;
  $("#cnt").textContent=c?w+(w>1?" words · ":" word · ")+[...c].length+" chars":"";
- $("#pre").textContent=preeti();
+ $("#pre").innerHTML=mode==="preeti"&&buf?esc(buf.slice(0,cur))+CARET+esc(buf.slice(cur)):esc(preeti());
  const cw=curWord(),on=!!cw&&favs.some(f=>f.u===cw);
  $("#fav").classList.toggle("on",on);$("#fav").setAttribute("aria-pressed",on);
 }
 
 // ---------- Preeti layout mode ----------
-const lastWord=()=>buf.split(/\s/).pop();
-function add(s){buf+=s;draw(s)}
-function tail(){let n=1;if(/[|«]$/.test(buf))n++;if(/[0iI]f$/.test(buf))n=2;return n}
+const before=()=>buf.slice(0,cur);
+const lastWord=()=>before().split(/\s/).pop();
+// replace `del` keystrokes before the cursor with `ins`
+function edit(del,ins){buf=buf.slice(0,cur-del)+ins+buf.slice(cur);cur+=ins.length-del}
+function add(s){edit(0,s);draw(s)}
+const moveTo=k=>{cur=Math.max(0,Math.min(buf.length,k));draw()};
+function tail(){const b=before();let n=1;if(/[|«]$/.test(b))n++;if(/[0iI]f$/.test(b))n=2;return n}
+// Where the cursor shows in the Unicode text: the longest typed prefix whose conversion starts the
+// whole text. Inside a reordered syllable (ि typed first, reph typed last) it falls back to the syllable start.
+function caretAt(raw){for(let k=cur;k>0;k--){const p=conv(buf.slice(0,k));if(raw.startsWith(p))return p.length}return 0}
+// the reverse, for a tap at Unicode offset `off`
+// ponytail: converts every prefix (O(n²)); fine for notes and letters, index syllables if texts get very long
+function caretFrom(raw,off){let best=0,bl=-1;for(let k=0;k<=buf.length;k++){const p=conv(buf.slice(0,k));if(p.length<=off&&p.length>=bl&&raw.startsWith(p)){bl=p.length;best=k}}return best}
 // where the ि key "l" must go: before the whole last conjunct, not just before its last letter
 function lpos(w){let st=w.length-Math.min(tail(),w.length);while(st>0&&isHalf(w[st-1]))st--;return st}
 function combos(){
@@ -71,25 +85,25 @@ function combos(){
 const SUG=[["ा","f"],["ि","*"],["ी","L"],["ु","'"],["ू",'"'],["े","]"],["ै","}"],["ो","f]"],["ौ","f}"],["ं","+"],["ँ","F"],["ः","M"],["्र","|"],["र्","{"],["ृ","["]];
 function drawPreeti(last){
  const raw=conv(buf),w=lastWord();
- render(raw);
+ render(raw,caretAt(raw));
  let msg="";
  if(last){
   if(last==="m"){const ok=!/m$/.test(raw);msg=ks("m")+(ok?" → <b>hook joined</b>":" → <b>hook only.</b> Joins after <kbd>k</kbd>प <kbd>p</kbd>उ <kbd>e</kbd>भ <kbd>q</kbd>त्र <kbd>Q</kbd>त्त. For म type <kbd>d</kbd>")}
   else msg=ks(last)+" → <b class=d>"+(last.length>1?sign(clean(conv(last))):lab(last))+"</b>";
   if(w)msg+=" &nbsp;word <b class=d>"+dsp(clean(conv(w)))+"</b>";
  }
- info.innerHTML=msg||"Each key is one Preeti glyph, just like in Word or LibreOffice";
+ info.innerHTML=msg||"Each key is one glyph, like in Word · tap the text or drag <b>space</b> to move the cursor";
  sg.innerHTML="";
  // dictionary: finish the word being typed
  const wu=w?clean(conv(w)):"";
- if(/^[\u0900-\u097f]+$/.test(wu))dict.prefix(wu).forEach(x=>sg.appendChild(chip("w",x.u,ks(toPreeti(x.u).slice(0,8)),()=>{buf=buf.slice(0,buf.length-w.length)+toPreeti(x.u)+" ";draw()})));
+ if(/^[\u0900-\u097f]+$/.test(wu))dict.prefix(wu).forEach(x=>sg.appendChild(chip("w",x.u,ks(toPreeti(x.u).slice(0,8)),()=>{edit(w.length,toPreeti(x.u)+" ");draw()})));
  combos().forEach(c=>sg.appendChild(chip("c",dsp(c.r),ks(c.n),()=>add(c.n))));
- if(/[क-ह]$/.test(clean(raw))){
+ if(/[क-ह]$/.test(clean(conv(before())))){
   const st=lpos(w);
   SUG.forEach(([d,k])=>{
    const r=clean(k==="*"?conv(w.slice(0,st)+"l"+w.slice(st)):conv(w+k));
    sg.appendChild(chip("",dsp(r),k==="*"?"<kbd>l</kbd> first":ks(k),()=>{
-    if(k==="*"){const o=buf.length-w.length+st;buf=buf.slice(0,o)+"l"+buf.slice(o);draw("l")}else add(k)}))})}
+    if(k==="*"){const o=cur-w.length+st;buf=buf.slice(0,o)+"l"+buf.slice(o);cur++;draw("l")}else add(k)}))})}
  if(!sg.children.length){favChips();if(!sg.children.length)empty("Suggestions appear here after a letter")}
 }
 
@@ -125,14 +139,15 @@ function drawRoman(){
 // ---------- shared ----------
 function draw(last){
  if(mode==="roman"){drawRoman();store.set("nw-rom",rin.value)}else{drawPreeti(last);store.set("nw-buf",buf)}
- // keep the newest text in view while tapping keys (not while the text box is being edited)
- const top=$("#top");if(document.activeElement!==rin)top.scrollTop=top.scrollHeight;
+ // keep the cursor (Preeti) or the newest text (Romanized) in view, but never fight the text box
+ const c=mode==="preeti"&&out.querySelector(".caret");
+ if(c)c.scrollIntoView({block:"nearest"});else if(document.activeElement!==rin){const top=$("#top");top.scrollTop=top.scrollHeight}
 }
 function setMode(m){
  mode=m;store.set("nw-mode",m);document.body.classList.toggle("roman",m==="roman");
  rin.hidden=m!=="roman";
- const mb=$("#mode");mb.innerHTML=m==="roman"?"⌨ <span class=tx>Preeti keys</span><span class=d aria-hidden=true>&nbsp;s→क</span>":"ABC";
- mb.setAttribute("aria-label",m==="roman"?"Switch to Preeti keys":"Switch to Romanized");mb.title=mb.getAttribute("aria-label");
+ const mb=$("#mode");mb.innerHTML=m==="roman"?"⌨ <span class=tx>Font keys</span><span class=d aria-hidden=true>&nbsp;s→क</span>":"ABC";
+ mb.setAttribute("aria-label",m==="roman"?"Switch to Devanagari font keys":"Switch to Romanized");mb.title=mb.getAttribute("aria-label");
  document.querySelectorAll("[data-mode]").forEach(e=>e.hidden=e.dataset.mode!==m);
  draw();if(m==="roman"&&fine)rin.focus();
 }
@@ -154,7 +169,12 @@ R.forEach(([a],ri)=>{const r=document.createElement("div");r.className="row";
  [...a].forEach(c=>r.appendChild(keys[c]=key("d","<i></i><span></span>","",b=>{add(b._c);if(shift===1)shift=0;layer()})));
  kb.appendChild(r)});
 // space, backspace and enter share the toolbar row, after the mode switch, chart and saved keys
-$("#bar").append(key("sp pk","space","Space",()=>add(" ")),key("w pk","⌫","Backspace",()=>{buf=buf.slice(0,-1);draw()}),key("w pk","↵","Enter",()=>add("\n")));
+// dragging the space bar moves the cursor, as on Android keyboards; a plain tap types a space
+const sp=key("sp pk","space","Space (drag to move the cursor)",()=>{if(!sp._moved)add(" ")});
+sp.onpointerdown=e=>{sp._x=e.clientX;sp._moved=false;sp.setPointerCapture(e.pointerId)};
+sp.onpointermove=e=>{if(sp._x==null)return;const d=Math.trunc((e.clientX-sp._x)/14);if(d){sp._x+=d*14;sp._moved=true;moveTo(cur+d)}};
+sp.onpointerup=sp.onpointercancel=()=>{sp._x=null};
+$("#bar").append(sp,key("w pk","⌫","Backspace",()=>{if(cur){edit(1,"");draw()}}),key("w pk","↵","Enter",()=>add("\n")));
 layer();
 const flash=c=>{const b=keys[SH[c]||c];if(b){b.classList.add("p");setTimeout(()=>b.classList.remove("p"),120)}};
 document.addEventListener("keydown",e=>{
@@ -162,7 +182,10 @@ document.addEventListener("keydown",e=>{
  if(e.key==="Shift"){held=true;layer();return}
  if(e.ctrlKey||e.metaKey||e.altKey)return;
  const t=e.target.tagName;if(t==="INPUT"||t==="TEXTAREA"||mode!=="preeti"||document.body.classList.contains("open"))return;
- if(e.key==="Backspace"){e.preventDefault();buf=buf.slice(0,-1);draw();return}
+ if(e.key==="Backspace"){e.preventDefault();if(cur){edit(1,"");draw()}return}
+ if(e.key==="Delete"){e.preventDefault();buf=buf.slice(0,cur)+buf.slice(cur+1);draw();return}
+ const mv={ArrowLeft:cur-1,ArrowRight:cur+1,Home:before().lastIndexOf("\n")+1,End:(i=>i<0?buf.length:i)(buf.indexOf("\n",cur))}[e.key];
+ if(mv!==undefined){e.preventDefault();moveTo(mv);return}
  if(e.key==="Enter"){e.preventDefault();add("\n");return}
  if(e.key===" "){e.preventDefault();add(" ");return}
  if(e.key.length===1&&(P[e.key]!==undefined||e.key==="m")){e.preventDefault();flash(e.key);add(e.key)}
@@ -185,8 +208,8 @@ function cp(s){
 $("#c1").onclick=()=>cp(uni());$("#c2").onclick=()=>cp(preeti());
 $("#cl").onclick=()=>{
  const was=mode==="roman"?rin.value:buf;if(!was)return;
- if(mode==="roman")rin.value="";else buf="";draw();
- toast("Cleared","Undo",()=>{if(mode==="roman")rin.value=was;else buf=was;draw()})};
+ if(mode==="roman")rin.value="";else buf="",cur=0;draw();
+ toast("Cleared","Undo",()=>{if(mode==="roman")rin.value=was;else buf=was,cur=was.length;draw()})};
 $("#fav").onclick=()=>{
  const u=curWord();if(!u){toast("Type a word first");return}
  const i=favs.findIndex(f=>f.u===u);
@@ -201,6 +224,17 @@ const isDark=()=>document.documentElement.dataset.theme?document.documentElement
 const syncTheme=()=>{themeMeta.content=isDark()?"#121212":"#faf8f5"};
 $("#theme").onclick=()=>{const t=isDark()?"light":"dark";document.documentElement.dataset.theme=t;store.set("nw-theme",t);syncTheme()};
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",syncTheme);syncTheme();
+
+// tap the Unicode text or the Preeti line to put the cursor there
+function tapOffset(el,e){
+ const p=document.caretPositionFromPoint?.(e.clientX,e.clientY),r=p?{n:p.offsetNode,o:p.offset}:(x=>x&&{n:x.startContainer,o:x.startOffset})(document.caretRangeFromPoint?.(e.clientX,e.clientY));
+ if(!r||r.n.nodeType!==3||!el.contains(r.n))return null;
+ let off=0;const tw=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
+ // count text before the tap, skipping the display-only ZWJ that dsp() adds
+ for(let n;(n=tw.nextNode());){off+=(n===r.n?n.data.slice(0,r.o):n.data).replace(/\u200d/g,"").length;if(n===r.n)break}
+ return off}
+out.addEventListener("click",e=>{if(mode!=="preeti"||!buf)return;const o=tapOffset(out,e);if(o!=null)moveTo(caretFrom(conv(buf),o))});
+$("#pre").addEventListener("click",e=>{if(mode!=="preeti"||!buf)return;const o=tapOffset($("#pre"),e);if(o!=null)moveTo(o)});
 
 // top bar can be hidden for more room; remembered
 const setHd=on=>{document.documentElement.classList.toggle("hd-off",!on);store.set("nw-hd",on?"1":"0")};
@@ -245,9 +279,9 @@ note("v","Tap to type. Keys shown as <kbd>⇧x</kbd> need Shift.");chips("v","c 
 chips("c",CN);
 note("h","Half letters join the next letter: <kbd>⇧s</kbd> then <kbd>t</kbd> makes क्त.");chips("h","S V U R H T Y W G K A E D N J Z i I : X ~","h");
 chips("j","St s| So Ug Gt Gb ;t ;y ;g Hh B Bj Kt k| k|m Dk Da Nn Q 4 2 R5 > cy{ wd{ sd{ k{ /");
-note("s","Extra Preeti glyphs. In Windows apps they need Alt codes; here you just tap them.");
+note("s","Extra font glyphs. In Windows apps they need Alt codes; here you just tap them.");
 grid("s",[["ª","0170"],["«","0171"],["¿","0191"],["Í","0205"],["Ë","0203"],["ß","0223"],["§","0167"],["¶","0182"],["•","0149"],["å","0229"],["¢","0162"],["Ø","0216"]].map(([c,a])=>["<span class=d>"+dsp(conv(c))+"</span><kbd>Alt+"+a+"</kbd>",()=>add(c)]));
-note("s","Unicode-only signs with no Preeti key.");
+note("s","Unicode-only signs with no font key.");
 grid("s",["ॐ","ऽ"].map(c=>["<span class=d>"+c+"</span><kbd>Unicode</kbd>",()=>add(c)]));
 chips("n","1 2 3 4 5 6 7 8 9 0f ! @ # $ % ^ & * ( ) . , -");
 note("n","Words to try:");chips("n","g]kfn gd:t] ef/t ldq cy{ wd{ k|mfO{ sf7df08f}+");
@@ -256,7 +290,7 @@ const cell=(k,i)=>k==="/"&&i===4?"?":k==="/"&&i===5?"¿":MK[i][0]+k+MK[i][1];
 $("#p-b").innerHTML="<p class=nt>Every letter with every vowel sign. Tap one to type it.</p><div class=vt>"+CN.split(" ").map(k=>
  "<div class=vr><b class=d>"+clean(conv(k))+"</b><div class=vc>"+MK.map((_,i)=>{const c=cell(k,i);return"<button data-k=\""+esc(c)+"\"><span class=d>"+clean(conv(c))+"</span><kbd>"+esc(c)+"</kbd></button>"}).join("")+"</div></div>").join("")+"</div>";
 $("#p-b").onclick=e=>{const b=e.target.closest("[data-k]");if(b)add(b.dataset.k)};
-$("#p-i").innerHTML="<ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Preeti keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li>Switch modes with the <b>ABC / ⌨</b> key at the bottom left. <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Preeti keys</b> works like typing with the Preeti font in Word or LibreOffice: each key is one glyph.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li><b>Blue keys</b> are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the Preeti font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>The Preeti layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline.</li></ul>";
+$("#p-i").innerHTML="<ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li>Switch modes with the <b>ABC / ⌨</b> key at the bottom left. <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Font keys</b> works like typing with a Devanagari font in Word or LibreOffice: each key is one glyph. It uses the <b>Preeti</b> layout, the most widely used one, so the copied font text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> by tapping the text, dragging the space bar, or with the arrow keys. Typing and ⌫ work at the cursor.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li><b>Blue keys</b> are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline.</li></ul>";
 const openSheet=id=>{document.body.classList.add("open");show(id)};
 $("#chart").onclick=()=>{buzz();openSheet(mode==="roman"?"r":"v")};$("#saved").onclick=()=>{buzz();openSheet("f")};
 $("#x").onclick=$("#bd").onclick=()=>document.body.classList.remove("open");

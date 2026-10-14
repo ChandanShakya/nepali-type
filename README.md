@@ -5,13 +5,13 @@ Type Nepali the easy way, in the browser, on desktop or Android. Works offline a
 **Live:** https://nepali-type.chandanshakya.com.np (also at https://nepali-type.pages.dev)
 
 - **Romanized mode:** type how it sounds. `namaste` → नमस्ते, `kaa` → का, `kt` → क्त. Works with any phone keyboard.
-- **Built-in dictionary:** about 800 common words, offline. Loose spellings find the right word (`nepal` → नेपाल, `bikas` → विकास). Tap the blue suggestion or press <kbd>Tab</kbd>. In Preeti mode it finishes the word you are typing.
-- **Preeti keys mode:** the classic Preeti layout, keystroke for keystroke, as it behaves in Word or LibreOffice with the Preeti font. Comes with an on-screen keyboard.
-- **Both outputs at once:** every mode shows Unicode Devanagari and the matching Preeti keystrokes. Copy either one.
+- **Built-in dictionary:** about 800 common words, offline. Loose spellings find the right word (`nepal` → नेपाल, `bikas` → विकास). Tap the blue suggestion or press <kbd>Tab</kbd>. In font keys mode it finishes the word you are typing.
+- **Font keys mode:** the classic Devanagari font layout, keystroke for keystroke, as it behaves in Word or LibreOffice. It uses the Preeti layout, the most widely used legacy Devanagari font. Comes with an on-screen keyboard and a movable cursor: tap the text, drag the space bar, or use the arrow keys to insert anywhere.
+- **Both outputs at once:** every mode shows Unicode Devanagari and the matching Devanagari font keystrokes. Copy either one.
 - **Live hints:** the bar above the keyboard shows what each key did and what you can type next.
 - **Keyboard-style layout:** the mode switch, Chart and ★ Saved sit in the bottom row next to space. The top bar can be hidden.
 - **Saved words:** star a word and it stays on your device, ready in the suggestion bar and under **★ Saved**.
-- **Chart and cheatsheet:** a quick chart inside the app, plus a full printable cheatsheet at [`/chart/`](https://nepali-type.chandanshakya.com.np/chart/) with the Preeti keyboard, the vowel table, half letters and every Romanized spelling.
+- **Chart and cheatsheet:** a quick chart inside the app, plus a full printable cheatsheet at [`/chart/`](https://nepali-type.chandanshakya.com.np/chart/) with the font keyboard, the vowel table, half letters and every Romanized spelling.
 - **Light and dark themes**, an installable PWA, and offline use after the first visit.
 
 ## Romanized cheat sheet
@@ -27,9 +27,9 @@ Type Nepali the easy way, in the browser, on desktop or Android. Works offline a
 
 Two consonants in a row join (`kt` → क्त). `n` before k, kh, g or gh becomes ङ (`gangaa` → गङ्गा).
 
-## Preeti notes
+## Font keys notes
 
-- `m` is not a letter in Preeti. It is a hook that changes the letter before it: `km` फ, `pm` ऊ, `em` झ, `qm` क्र, `Qm` क्त. A stray `m` shows in red and is left out of copied text. For म type `d`.
+- `m` is not a letter in the font layout. It is a hook that changes the letter before it: `km` फ, `pm` ऊ, `em` झ, `qm` क्र, `Qm` क्त. A stray `m` shows in red and is left out of copied text. For म type `d`.
 - `l` (ि) is typed before its letter. `{` (reph र्) is typed after it. The converter puts both in the right Unicode order.
 - `0f`, `if`, `If` are single letters: ण, ष, क्ष.
 

@@ -82,8 +82,8 @@ export function roman(s){
    u+=C[t];prevC=true;toks.push([t,"c"])}
   else if(t in V){u+=prevC?V[t][1]:V[t][0];prevC=false;toks.push([t,"v"])}
   else if(t==="\\"){if(prevC)u+="्";prevC=false;toks.push([t,"h"])}
-  // ' only separates letters: ra'aa -> रआ (not रा)
-  else if(t==="'")toks.push([t,"s"]);
+  // ' ends the syllable without joining: ra'aa -> रआ (not रा), k'kh -> कख (not क्ख)
+  else if(t==="'"){prevC=false;toks.push([t,"s"])}
   else if(t in X){u+=X[t];prevC=false;toks.push([t,"x"])}
   else{u+=O[t]??t;prevC=false;toks.push([t,"o"])}
  }
@@ -91,7 +91,7 @@ export function roman(s){
 }
 
 // ---------- Unicode -> romanized (this app's scheme), for putting dictionary words back as keystrokes ----------
-const RC={},RV={},RM={"ा":"aa","ि":"i","ी":"ii","ु":"u","ू":"uu","ृ":"Ri","े":"e","ै":"ai","ो":"o","ौ":"au"},RX2={"ं":"M","ँ":"~","ः":"H","।":"."};
+const RC={},RV={},RM={"ा":"aa","ि":"i","ी":"ii","ु":"u","ू":"uu","ृ":"Ri","े":"e","ै":"ai","ो":"o","ौ":"au"},RX2={"ं":"M","ँ":"~","ः":"H","।":".",".":".."};
 for(const[k,v] of Object.entries(C))if(!(v in RC)&&v.length===1)RC[v]=k;
 Object.assign(RC,{"फ":"ph","व":"w","छ":"chh","ष":"Sh","च":"ch","क":"k","ज":"j"});
 for(const[k,[ind]] of Object.entries(V))if(!(ind in RV))RV[ind]=k;
@@ -111,7 +111,7 @@ export function toRoman(u,sep=""){
     if(!isC(nx)){o+="\\";continue}
     const nr=u.startsWith("क्ष",i+1)?"ksh":u.startsWith("ज्ञ",i+1)?"gy":RC[nx]||"";
     if(tok(r+nr,0)[0]!==r||(r==="n"&&NAS[nx]))o+="\\"}
-   else if(isC(n)||RV[n])o+="a";
+   else if(isC(n)||RV[n]||"ंँः".includes(n??"\0"))o+="a";
   }
   else if(RV[c])o+=(/[aeiouAEIOUR~]$/.test(o)?sep:"")+RV[c];
   else if(RX2[c])o+=RX2[c];

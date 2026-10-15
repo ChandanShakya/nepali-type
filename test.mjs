@@ -30,3 +30,14 @@ for(const[r,u] of [["nepal","नेपाल"],["Nepal","नेपाल"],["nam
 assert.ok(dict.size>700);
 const bad=[...readFileSync("src/data/words.txt","utf8").split("\n")].filter(w=>w&&w[0]!=="#"&&!/\s/.test(w)&&!toRoman(w.replace(/[‌‍]/g,"")));
 console.log("dictionary",dict.size,"words; not romanizable:",bad.join(" ")||"none");
+
+// every chart entry must type back exactly in both modes, so the app chart and the cheatsheet can never disagree
+import {VOWELS,CONSONANTS,MATRAS,CONJUNCTS,PUNCT,SPECIALS,entry} from "./src/scripts/charts.js";
+const all=[...VOWELS,...CONSONANTS,...CONSONANTS.map(c=>c+"्"),...CONJUNCTS,...PUNCT,...CONSONANTS.flatMap(c=>MATRAS.map(m=>c+m))];
+const es=all.map(entry);
+assert.deepEqual(es.filter(e=>!e.r||roman(e.r).u!==e.u).map(e=>e.u),[],"chart entries without an exact Romanized spelling");
+assert.deepEqual(es.filter(e=>e.p===null).map(e=>e.u),["टृ"],"only टृ lacks font keys");
+console.log("chart",all.length,"entries round-trip in Romanized and font keys");
+// specials: each glyph decodes to its letter, and any Romanized spelling types it back
+for(const e of SPECIALS){if(e.p)assert.equal(clean(conv(e.p)),e.u,e.p);if(e.r)assert.equal(roman(e.r).u,e.u,e.r)}
+console.log("specials",SPECIALS.length,"checked");

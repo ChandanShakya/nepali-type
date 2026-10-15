@@ -21,7 +21,7 @@ Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali 
 | **Same text in both modes** | Switching between Romanized and font keys converts your text, so nothing is lost. |
 | **Copy any box** | Each box has a copy button in its top-right corner. A tick shows which one was copied. |
 | **Saved words** | **★ Save** keeps the word before the cursor. Saved words show up in the suggestion bar and under **★ Saved** (tap to type, × to remove). |
-| **Chart and cheatsheet** | **Chart** in the bottom row opens a quick reference. [`/chart/`](https://nepali-type.chandanshakya.com.np/chart/) is the full, printable guide: the font keyboard, the vowel table (बाह्रखरी), half letters, conjuncts and every Romanized spelling. |
+| **Chart and cheatsheet** | **Chart** in the bottom row and the printable [`/chart/`](https://nepali-type.chandanshakya.com.np/chart/) page show the same alphabet: vowels, consonants, the full vowel table (बाह्रखरी), half letters, conjuncts, signs, digits and specials (the extra Preeti glyphs with their Windows Alt codes, plus ॐ and ऽ). Every letter is shown with its Romanized spelling and its font keys, and tapping a letter in the app types it in the current mode. A jump bar takes you to any consonant in the vowel table, and **Find** in the app's chart looks up a letter by Romanized spelling (`kha`, `ksh`), font key (`v`, `S`) or Devanagari. The cheatsheet also has the font keyboard and the Romanized rules. |
 | **More room** | Hide the top bar with **⌃**. Card titles disappear and the buttons become icons. Bring the bar back with **⌄** in the bottom row. |
 | **Welcome video** | Plays once on your first visit. Watch it again from Chart → Help → ▶ Watch the demo. |
 | **Dark mode** | Follows your system until you choose with the moon button. |
@@ -69,6 +69,8 @@ src/
   styles/base.css       theme tokens shared by both pages
   scripts/nepali.js     conversion logic (Preeti ⇄ Unicode, Romanized → Unicode), no DOM
   scripts/app.js        UI: modes, keyboard, hints, dictionary, saved words, theme, install
+  scripts/charts.js     the alphabet shown by the in-app chart and the cheatsheet
+  components/Cell.astro one cheatsheet cell
   data/words.txt        dictionary: one word per line, optional extra spellings after it
 public/
   sw.js                 service worker; the build fills in the file list and version

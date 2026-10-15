@@ -18,6 +18,13 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .vc{flex:1;min-width:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:4px}
 .vc>*{text-align:center;padding:3px 0;border-radius:8px;font:inherit;color:inherit;background:none;border:0}
 .vc .d{display:block;font-size:21px;line-height:1.3}
-.vc kbd{font-size:10px;white-space:nowrap}
+.vc kbd{font-size:10px;white-space:nowrap;display:block;width:max-content;margin:1px auto}
+/* Romanized spellings are blue everywhere; font keys stay grey */
+.kr{color:var(--blue)!important}
 button.vc>*:hover,.vc>button:hover{background:var(--surface2)}
 @media (max-width:560px){.vr{flex-direction:column;gap:4px}.vr>b{width:auto;height:32px;font-size:22px}.vc{grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:2px}.vc .d{font-size:19px}}
+/* vowel table jump bar: one button per consonant, stays visible while the table scrolls */
+.jump{position:sticky;top:0;z-index:3;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:6px 0;background:var(--bg)}
+.jump::-webkit-scrollbar{display:none}
+.jump a,.jump button{flex:none;min-width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;font-size:19px;color:var(--fg);text-decoration:none;cursor:pointer;font-family:"Noto Sans Devanagari","Nirmala UI","Mangal",sans-serif}
+.jump a:hover,.jump button:hover{border-color:var(--ac);color:var(--ac)}

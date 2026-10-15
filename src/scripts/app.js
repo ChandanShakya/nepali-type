@@ -1,4 +1,5 @@
 import {R,SH,SH2,KEYS,P,conv,clean,toPreeti,toRoman,roman,ROMAN,makeDict} from "./nepali.js";
+import {VOWELS,CONSONANT_ROWS,CONSONANTS,MATRAS,CONJUNCTS,PUNCT,SPECIALS,entry,findEntries} from "./charts.js";
 import words from "../data/words.txt?raw";
 
 // the dictionary is built on first use (or when the browser is idle), not during page load
@@ -155,7 +156,6 @@ function setMode(m){
  mode=m;store.set("nw-mode",m);document.documentElement.classList.toggle("roman",m==="roman");
  const mb=$("#mode");mb.innerHTML=m==="roman"?"⌨ <span class=tx>Font keys</span><span class=d aria-hidden=true>&nbsp;s→क</span>":"ABC";
  mb.setAttribute("aria-label",m==="roman"?"Switch to Devanagari font keys":"Switch to Romanized");mb.title=mb.getAttribute("aria-label");
- document.querySelectorAll("[data-mode]").forEach(e=>e.hidden=e.dataset.mode!==m);
  draw();if(m==="roman"&&fine)rin.focus();
 }
 $("#mode").onclick=()=>{buzz();const m=mode==="roman"?"preeti":"roman";carry(m);setMode(m)};
@@ -267,15 +267,25 @@ addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;inst.hi
 addEventListener("appinstalled",()=>{inst.hidden=true;deferred=null});
 inst.onclick=async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;inst.hidden=true};
 
-// ---------- chart sheet. Tabs tagged with a mode only show in that mode ----------
-const TABS=[["f","★ Saved"],["r","Romanized","roman"],["v","Vowels","preeti"],["c","Letters","preeti"],["h","Half forms","preeti"],["j","Conjuncts","preeti"],["s","Special","preeti"],["n","Digits","preeti"],["b","Table","preeti"],["i","Help"]];
+// ---------- chart sheet: the same alphabet as the /chart/ cheatsheet (scripts/charts.js) ----------
+const TABS=[["f","★ Saved"],["v","Vowels"],["c","Consonants"],["b","Vowel table"],["h","Half letters"],["j","Conjuncts"],["s","Signs & digits"],["x","Specials"],["i","Help"]];
 const tabs=$("#tabs"),body=$("#body");
-TABS.forEach(([id,t,m])=>{const b=document.createElement("button");b.className="tb";b.textContent=t;b.onclick=()=>show(id);b.dataset.t=id;if(m)b.dataset.mode=m;tabs.appendChild(b);
+TABS.forEach(([id,t])=>{const b=document.createElement("button");b.className="tb";b.textContent=t;b.onclick=()=>show(id);b.dataset.t=id;tabs.appendChild(b);
  const p=document.createElement("div");p.className="pn";p.id="p-"+id;body.appendChild(p)});
-function show(id){tabs.querySelectorAll(".tb").forEach(b=>b.classList.toggle("on",b.dataset.t===id));body.querySelectorAll(".pn").forEach(p=>p.classList.toggle("on",p.id==="p-"+id))}
+function show(id){if(id!=="q")lastTab=id;if($("#cq").value&&id!=="q")$("#cq").value="";tabs.querySelectorAll(".tb").forEach(b=>b.classList.toggle("on",b.dataset.t===id));body.querySelectorAll(".pn").forEach(p=>p.classList.toggle("on",p.id==="p-"+id))}
 function grid(id,items){const g=document.createElement("div");g.className="g";items.forEach(([html,fn,cls])=>{const b=document.createElement("button");b.className="ch "+(cls||"");b.innerHTML=html;b.onclick=fn;g.appendChild(b)});$("#p-"+id).appendChild(g);return g}
-const chips=(id,list,cls)=>grid(id,list.split(" ").map(k=>["<span class=d>"+dsp(clean(conv(k)))+"</span>"+ks(k),()=>add(k),cls]));
 const note=(id,t)=>{const p=document.createElement("p");p.className="nt";p.innerHTML=t;$("#p-"+id).appendChild(p)};
+// a chart cell: the letter, its Romanized spelling (blue) and its font keys (grey)
+const cellHTML=(e,label)=>"<span class=d>"+(label??dsp(e.u))+"</span><kbd class=kr>"+(e.r?esc(e.r):"—")+"</kbd><kbd>"+(e.p?esc(e.p):"—")+"</kbd>"+(e.code?"<small>Alt+"+e.code+"</small>":"");
+// tapping types the entry in the current mode. Romanized: the word is re-spelled so letters never merge (क then ख gives कख, not क्ख)
+function typeEntry(e){
+ // with no key in the current mode the Unicode letter goes in as is; both converters pass it through
+ if(mode==="preeti"){add(e.p??e.u);if(!e.p)toast("No font key: added as Unicode");return}
+ if(!e.r){rin.setRangeText(e.u,rin.selectionStart,rin.selectionEnd,"end");draw();return}
+ const end=rin.selectionEnd,w=rin.value.slice(0,end).split(/\s/).pop(),start=end-w.length;
+ const u=roman(w+(w&&!/\s$/.test(w)?"'":"")+e.r).u;
+ rin.setRangeText(toRoman(u)??(w+"'"+e.r),start,end,"end");draw()}
+const cells=(id,list,label)=>grid(id,list.map(u=>{const e=entry(u);return[cellHTML(e,label?.(u)),()=>typeEntry(e)]}));
 function drawFavs(){
  const p=$("#p-f");p.innerHTML="";$("#favn").textContent=favs.length||"";
  if(!favs.length){note("f","No saved words yet. Type a word and press <b>★ Save</b>. Saved words stay on this device and show up in the suggestion bar.");return}
@@ -287,34 +297,34 @@ drawFavs();
 // chart contents are built the first time the sheet opens, keeping page load light
 let built=false;
 function buildChart(){if(built)return;built=true;
-// Romanized chart
-const rchips=list=>grid("r",list.map(k=>["<span class=d>"+sign(roman(k).u)+"</span><kbd>"+esc(k)+"</kbd>",()=>{document.body.classList.remove("open");insert(k)}]));
-note("r","Type how it sounds. A consonant alone keeps its <b>a</b> sound; two consonants join: <kbd>kt</kbd> क्त. Capitals matter: <kbd>t</kbd> त <kbd>T</kbd> ट. Blue suggestions come from the built-in dictionary of "+dict().size+" words, so <kbd>nepal</kbd> still finds नेपाल.");
-rchips(Object.keys(ROMAN.V));
-note("r","Consonants");rchips(Object.keys(ROMAN.C));
-note("r","Signs: <kbd>M</kbd> ं &nbsp;<kbd>~</kbd> ँ &nbsp;<kbd>H</kbd> ः &nbsp;<kbd>\\</kbd> halant ् (word-final: <kbd>chhan\\</kbd> छन्) &nbsp;<kbd>.</kbd> । &nbsp;<kbd>..</kbd> . &nbsp;digits → ०-९. <kbd>n</kbd> before k/kh/g/gh becomes ङ: <kbd>gangaa</kbd> गङ्गा. <kbd>'</kbd> keeps letters apart: <kbd>ra'aa</kbd> रआ.");
-rchips(["kamal","kaa","ki","kii","ku","kuu","ke","kai","ko","kau","kRi","kaM","kaa~","dukha","kShetra","gyaan","shrii","prem","sangiit","maanchhe","hunchha","chha\\"]);
-// Preeti charts
-const CN="s v u 3 ª r 5 h em ` 6 7 8 9 0f t y b w g k km a e d o / n j z if ; x If q 1";
-note("v","Tap to type. Keys shown as <kbd>⇧x</kbd> need Shift.");chips("v","c cf O O{ p pm C P P] cf] cf} c+ cF cM");
-chips("c",CN);
-note("h","Half letters join the next letter: <kbd>⇧s</kbd> then <kbd>t</kbd> makes क्त.");chips("h","S V U R H T Y W G K A E D N J Z i I : X ~","h");
-chips("j","St s| So Ug Gt Gb ;t ;y ;g Hh B Bj Kt k| k|m Dk Da Nn Q 4 2 R5 > cy{ wd{ sd{ k{ /");
-note("s","Extra font glyphs. In Windows apps they need Alt codes; here you just tap them.");
-grid("s",[["ª","0170"],["«","0171"],["¿","0191"],["Í","0205"],["Ë","0203"],["ß","0223"],["§","0167"],["¶","0182"],["•","0149"],["å","0229"],["¢","0162"],["Ø","0216"]].map(([c,a])=>["<span class=d>"+dsp(conv(c))+"</span><kbd>Alt+"+a+"</kbd>",()=>add(c)]));
-note("s","Unicode-only signs with no font key.");
-grid("s",["ॐ","ऽ"].map(c=>["<span class=d>"+c+"</span><kbd>Unicode</kbd>",()=>add(c)]));
-chips("n","1 2 3 4 5 6 7 8 9 0f ! @ # $ % ^ & * ( ) . , -");
-note("n","Words to try:");chips("n","g]kfn gd:t] ef/t ldq cy{ wd{ k|mfO{ sf7df08f}+");
-const MK=[["",""],["","f"],["l",""],["","L"],["","'"],["","\""],["","["],["","]"],["","}"],["","f]"],["","f}"],["","+"],["","M"]];
-const cell=(k,i)=>k==="/"&&i===4?"?":k==="/"&&i===5?"¿":MK[i][0]+k+MK[i][1];
-$("#p-b").innerHTML="<p class=nt>Every letter with every vowel sign. Tap one to type it.</p><div class=vt>"+CN.split(" ").map(k=>
- "<div class=vr><b class=d>"+clean(conv(k))+"</b><div class=vc>"+MK.map((_,i)=>{const c=cell(k,i);return"<button data-k=\""+esc(c)+"\"><span class=d>"+clean(conv(c))+"</span><kbd>"+esc(c)+"</kbd></button>"}).join("")+"</div></div>").join("")+"</div>";
-$("#p-b").onclick=e=>{const b=e.target.closest("[data-k]");if(b)add(b.dataset.k)};
-$("#p-i").innerHTML="<p class=nt><button class='bt p' id=watch>▶ Watch the demo</button> <a class=bt href=/chart/>Full cheatsheet</a> <a class=bt href='"+$(".ib[href*=github]").href+"' target=_blank rel=noopener>GitHub</a></p><ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li>Switch modes with the <b>ABC / ⌨</b> key at the bottom left. <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Font keys</b> works like typing with a Devanagari font in Word or LibreOffice: each key is one glyph. It uses the <b>Preeti</b> layout, the most widely used one, so the copied font text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> by tapping the text, dragging the space bar, or with the arrow keys. Typing and ⌫ work at the cursor.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li><b>Blue keys</b> are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline.</li></ul>";
+const LEGEND="Each cell: the letter, its <kbd class=kr>Romanized</kbd> spelling and its <kbd>font</kbd> keys. Tap to type it.";
+note("v",LEGEND);cells("v",VOWELS);
+note("v","After a consonant, vowels become signs: see the <b>Vowel table</b>.");
+note("c",LEGEND);CONSONANT_ROWS.forEach(r=>cells("c",r));
+note("c","Romanized: a consonant alone keeps its <b>a</b> sound; two in a row join (<kbd class=kr>kt</kbd> क्त). Capitals matter: <kbd class=kr>t</kbd> त, <kbd class=kr>T</kbd> ट. Also: <kbd class=kr>f</kbd> फ, <kbd class=kr>v</kbd> व, <kbd class=kr>x</kbd> क्ष.");
+note("b","Every consonant with every vowel sign (बाह्रखरी). Tap one to type it.");
+$("#p-b").insertAdjacentHTML("beforeend","<div class=jump aria-label=\"Jump to a letter\">"+CONSONANTS.map((c,i)=>"<button data-j="+i+">"+c+"</button>").join("")+"</div><div class=vt>"+CONSONANTS.map((c,i)=>"<div class=vr id=vr"+i+"><b class=d>"+c+"</b><div class=vc>"+MATRAS.map(m=>{const e=entry(c+m);return"<button data-u=\""+e.u+"\"><span class=d>"+e.u+"</span><kbd class=kr>"+esc(e.r)+"</kbd><kbd>"+(e.p?esc(e.p):"—")+"</kbd></button>"}).join("")+"</div></div>").join("")+"</div>");
+$("#p-b").onclick=e=>{const j=e.target.closest("[data-j]");if(j){$("#vr"+j.dataset.j).scrollIntoView({block:"start",behavior:"smooth"});return}const b=e.target.closest("[data-u]");if(b)typeEntry(entry(b.dataset.u))};
+note("h","A half letter joins the next one: <kbd class=kr>k</kbd>+<kbd class=kr>t</kbd> or <kbd>S</kbd>+<kbd>t</kbd> gives क्त.");
+grid("h",CONSONANTS.map(c=>{const e=entry(c+"्");return[cellHTML(e),()=>typeEntry(e),"h"]}));
+note("j","Common conjuncts.");cells("j",CONJUNCTS);
+note("s","Punctuation and digits.");cells("s",PUNCT);
+note("x","Extra font glyphs. In Windows apps they need the Alt code shown; here you just tap them. ॐ and ऽ are Unicode-only.");
+grid("x",SPECIALS.map(e=>[cellHTML(e,e.u.startsWith("्")?"◌"+e.u:dsp(e.u)),()=>typeEntry(e)]));
+note("s","Signs: <kbd class=kr>M</kbd> <kbd>+</kbd> ं &nbsp;<kbd class=kr>~</kbd> <kbd>F</kbd> ँ &nbsp;<kbd class=kr>H</kbd> <kbd>M</kbd> ः &nbsp;<kbd class=kr>\\</kbd> <kbd>\\</kbd> halant ्. Romanized <kbd class=kr>'</kbd> keeps letters apart (<kbd class=kr>ra'aa</kbd> रआ). Font keys: <kbd>m</kbd> is a hook (<kbd>km</kbd> फ, <kbd>em</kbd> झ, <kbd>pm</kbd> ऊ).");
+$("#p-i").innerHTML="<p class=nt><button class='bt p' id=watch>▶ Watch the demo</button> <a class=bt href=/chart/>Full cheatsheet</a> <a class=bt href='"+$(".ib[href*=github]").href+"' target=_blank rel=noopener>GitHub</a></p><ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li>Switch modes with the <b>ABC / ⌨</b> key at the bottom left. <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Font keys</b> works like typing with a Devanagari font in Word or LibreOffice: each key is one glyph. It uses the <b>Preeti</b> layout, the most widely used one, so the copied font text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> by tapping the text, dragging the space bar, or with the arrow keys. Typing and ⌫ work at the cursor.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li>Every chart cell shows the letter, its <b class=kr>Romanized spelling</b> (blue) and its <b>font keys</b> (grey). Tap it to type it in the current mode. The <a href=/chart/>cheatsheet page</a> uses the same chart.</li><li><b>Blue keys</b> on the font keyboard are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline.</li></ul>";
 $("#watch").onclick=()=>{document.body.classList.remove("open");openIntro()};
 }
+// Find: shows every chart entry matching the query; empty query goes back to the open tab
+let lastTab="c";
+$("#cq").addEventListener("input",()=>{
+ buildChart();const q=$("#cq").value.trim(),p=$("#p-q");
+ if(!q){show(lastTab);return}
+ p.innerHTML="";const hits=findEntries(q);
+ if(!hits.length)note("q","Nothing found for <b>"+esc(q)+"</b>. Try a Romanized spelling (<kbd class=kr>kha</kbd>), a font key (<kbd>v</kbd>) or a Devanagari letter.");
+ else grid("q",hits.map(e=>[cellHTML(e,e.u.endsWith("्")?dsp(e.u):undefined),()=>typeEntry(e)]));
+ body.querySelectorAll(".pn").forEach(x=>x.classList.toggle("on",x.id==="p-q"));tabs.querySelectorAll(".tb").forEach(b=>b.classList.remove("on"))});
 const openSheet=id=>{buildChart();document.body.classList.add("open");show(id)};
-$("#chart").onclick=()=>{buzz();openSheet(mode==="roman"?"r":"v")};$("#saved").onclick=()=>{buzz();openSheet("f")};
+$("#chart").onclick=()=>{buzz();openSheet("c")};$("#saved").onclick=()=>{buzz();openSheet("f")};
 $("#x").onclick=$("#bd").onclick=()=>document.body.classList.remove("open");
 setMode(mode);

@@ -46,6 +46,7 @@ Two consonants in a row join (`kt` → क्त). `n` before k, kh, g or gh bec
 - `m` is not a letter in the font layout. It is a hook that changes the letter before it: `km` फ, `pm` ऊ, `em` झ, `qm` क्र, `Qm` क्त. A stray `m` shows in red and is left out of copied text. For म type `d`.
 - `l` (ि) is typed before its letter. `{` (reph र्) is typed after it. The converter puts both in the right Unicode order.
 - `0f`, `if`, `If` are single letters: ण, ष, क्ष.
+- A character the Preeti font has no key for (`!` `-` `:` `;`, ऑ ॉ ऽ ॐ, nukta letters) is shown in red in the font box. Those keys mean something else in the font (`!` is १, `;` is स), so the app never passes them through as if they were keys.
 
 ## Development
 

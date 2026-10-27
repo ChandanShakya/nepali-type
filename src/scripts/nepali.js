@@ -41,13 +41,21 @@ const T={"ि":"l","\u0002":"{"};
 ["cf]","cf}","O{","P]","f]","f}",...KEYS,...Object.keys(P).filter(c=>c>"~"),...KEYS.map(k=>k+"f"),...KEYS.map(k=>k+"m")].forEach(k=>{
  if(/[{l]/.test(k)&&k!=="O{")return;const u=clean(conv(k));if(u&&u!==k&&!(u in T))T[u]=k});
 const TMAX=Math.max(...Object.keys(T).map(u=>u.length));
-export function toPreeti(u){
- u=u.replace(/\u200d/g,"");
- // ि is typed before its whole conjunct; reph र् after its letter and vowel signs (but before ं ँ)
+// A character the font has no key for: Devanagari letters it lacks (ऑ ॉ ऽ ॐ …) and ASCII symbols whose keys mean
+// something else in the font (! is १, - is "(", ; is स). With mark set, such a character is wrapped in \u0003 … \u0004
+// so the page can show it as "no key"; without it the character is left as is (copying keeps it).
+const noKey=c=>c>" "&&(/[\u0900-\u097f]/.test(c)||c==="m"||conv(c)!==c);
+export function toPreeti(u,mark=false){
+ // a joiner is dropped, except after र् where र्‍ is the half-ra glyph ¥
+ u=u.replace(/(?<!\u0930\u094d)\u200d/g,"");
+ // reph र् goes after its whole syllable (letter and vowel signs). It must be placed before ि is moved:
+ // otherwise the ि of the next syllable ends up beside this one and is pulled into it (अन्तर्राष्ट्रिय)
+ // a reph starts its syllable: after a halant the र् is part of a conjunct chain (ट्र्ब), not a reph
+ u=u.replace(RX("(?<!्)र्((?:["+K+"]्)*["+K+"][ािीुूृेैोौ]*)"),"$1\u0002");
+ // ि is typed before its whole conjunct
  u=u.replace(RX("((?:["+K+"]्)*["+K+"])ि"),"ि$1");
- u=u.replace(RX("र्((?:["+K+"]्)*["+K+"][ािीुूृेैोौ]*)"),"$1\u0002");
  let o="";
- for(let i=0;i<u.length;){let n=Math.min(TMAX,u.length-i);while(n>1&&!(u.substr(i,n) in T))n--;const c=u.substr(i,n);o+=T[c]??c;i+=n}
+ for(let i=0;i<u.length;){let n=Math.min(TMAX,u.length-i);while(n>1&&!(u.substr(i,n) in T))n--;const c=u.substr(i,n);o+=T[c]??(mark&&noKey(c)?"\u0003"+c+"\u0004":c);i+=n}
  return o;
 }
 

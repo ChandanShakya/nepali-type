@@ -28,7 +28,8 @@ const top=r=>dict.roman(r)[0]?.u;
 for(const[r,u] of [["nepal","नेपाल"],["Nepal","नेपाल"],["namaste","नमस्ते"],["dhanyabad","धन्यवाद"],["kathmandu","काठमाडौं"],["bikas","विकास"],["chha","छ"],["sansar","संसार"],["gaun","गाउँ"],["manchhe","मान्छे"],["school","स्कुल"],["sagarmatha","सगरमाथा"],["kamal","कमल"]])
  assert.equal(top(r),u,"dict "+r);
 assert.ok(dict.size>700);
-const bad=[...readFileSync("src/data/words.txt","utf8").split("\n")].filter(w=>w&&w[0]!=="#"&&!/\s/.test(w)&&!toRoman(w.replace(/[‌‍]/g,"")));
+// exact: the word shown as a suggestion must be what Romanized and the font keys give back (no hidden joiners). Lines with extra spellings are checked too.
+const bad=readFileSync("src/data/words.txt","utf8").split("\n").filter(l=>l&&l[0]!=="#").map(l=>l.split(/\s+/)[0]).filter(w=>roman(toRoman(w)??"").u!==w||clean(conv(toPreeti(w)))!==w);
 console.log("dictionary",dict.size,"words; not romanizable:",bad.join(" ")||"none");
 
 // every chart entry must type back exactly in both modes, so the app chart and the cheatsheet can never disagree
@@ -44,3 +45,24 @@ console.log("chart",all.length,"entries round-trip in Romanized and font keys");
 // specials: each glyph decodes to its letter, and any Romanized spelling types it back
 for(const e of SPECIALS){if(e.p)assert.equal(clean(conv(e.p)),e.u,e.p);if(e.r)assert.equal(roman(e.r).u,e.u,e.r)}
 console.log("specials",SPECIALS.length,"checked");
+
+// reph, ि, conjuncts and vowel signs in every order a word can have them (अन्तर्राष्ट्रिय once came back as अन्तरािर्ष्ट्रय)
+{const Cs="कतरषयसन".split(""),M1=["","ा","ी","ु"],M2=["ि","ा","ु","े"],bad=[];
+ for(const a of Cs)for(const b of Cs)for(const m1 of M1)for(const c of Cs)for(const d of ["",...Cs])for(const m2 of M2){
+  const w=a+"र्"+b+m1+c+(d?"्"+d:"")+m2;if(clean(conv(toPreeti(w)))!==w)bad.push(w)}
+ assert.deepEqual(bad.slice(0,10),[],"reph/ि/conjunct combos that do not round-trip ("+bad.length+")")}
+for(const w of ["अन्तर्राष्ट्रिय","सर्किट","कर्मचारी","पर्यटन"])assert.equal(clean(conv(toPreeti(w))),w,w);
+// the half-ra (र्‍) keeps its joiner as ¥; other joiners are dropped
+assert.equal(toPreeti("गर्‍यो"),"u¥of]");assert.equal(conv("u¥of]"),"गर्‍यो");
+console.log("reph/ि/conjunct combos round-trip");
+
+// a character the font has no key for is flagged, never passed through looking like a key that means something else
+{const miss=[];
+ for(let i=0x21;i<0x7f;i++){const c=String.fromCharCode(i);if(clean(conv(toPreeti(c)))!==c&&!toPreeti(c,true).includes("\u0003"))miss.push(c)}
+ for(let c=0x900;c<=0x97f;c++){const ch=String.fromCodePoint(c);if(/[\u0900-\u097f]/.test(toPreeti(ch))&&!toPreeti(ch,true).includes("\u0003"))miss.push(ch)}
+ assert.deepEqual(miss,[],"characters passed through unflagged");
+ assert.equal(toPreeti("नेपाल!",true),"g]kfn\u0003!\u0004");assert.equal(toPreeti("नेपाल!"),"g]kfn!");assert.equal(toPreeti("(ठीक?)",true),"-7Ls<_","brackets and ? have font keys");
+ console.log("characters without a font key are flagged")}
+// र in the middle of a conjunct chain is not a reph (ट्र्ब); one that starts a syllable is
+for(const w of ["ट्र्ब","क्र्य","अर्थ","उर्दू","अन्तर्राष्ट्रिय"])assert.equal(clean(conv(toPreeti(w))),w,w);
+console.log("reph vs conjunct chain ok");

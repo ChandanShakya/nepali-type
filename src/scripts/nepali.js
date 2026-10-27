@@ -39,7 +39,7 @@ export const clean=u=>u.replace(/m/g,"");
 // Unicode -> Preeti keystrokes. Built from conv itself, so the two can never disagree.
 const T={"ि":"l","\u0002":"{"};
 ["cf]","cf}","O{","P]","f]","f}",...KEYS,...Object.keys(P).filter(c=>c>"~"),...KEYS.map(k=>k+"f"),...KEYS.map(k=>k+"m")].forEach(k=>{
- if(/[{l]/.test(k))return;const u=clean(conv(k));if(u&&u!==k&&!(u in T))T[u]=k});
+ if(/[{l]/.test(k)&&k!=="O{")return;const u=clean(conv(k));if(u&&u!==k&&!(u in T))T[u]=k});
 const TMAX=Math.max(...Object.keys(T).map(u=>u.length));
 export function toPreeti(u){
  u=u.replace(/\u200d/g,"");

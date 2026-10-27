@@ -37,6 +37,9 @@ const all=[...VOWELS,...CONSONANTS,...CONSONANTS.map(c=>c+"्"),...CONJUNCTS,..
 const es=all.map(entry);
 assert.deepEqual(es.filter(e=>!e.r||roman(e.r).u!==e.u).map(e=>e.u),[],"chart entries without an exact Romanized spelling");
 assert.deepEqual(es.filter(e=>e.p===null).map(e=>e.u),["टृ"],"only टृ lacks font keys");
+// font keys are keystrokes, never Devanagari passed through unconverted (ई once came out as ई instead of O{)
+assert.deepEqual(es.filter(e=>e.p&&/[\u0900-\u097f]/.test(e.p)).map(e=>e.u),[],"entries whose font keys contain Devanagari");
+assert.equal(toPreeti("ई"),"O{");
 console.log("chart",all.length,"entries round-trip in Romanized and font keys");
 // specials: each glyph decodes to its letter, and any Romanized spelling types it back
 for(const e of SPECIALS){if(e.p)assert.equal(clean(conv(e.p)),e.u,e.p);if(e.r)assert.equal(roman(e.r).u,e.u,e.r)}

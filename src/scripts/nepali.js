@@ -157,12 +157,18 @@ export function makeDict(text){
   const[w,...alias]=line.trim().replace(/[\u200c\u200d]/g,"").split(/\s+/);if(!w||w[0]==="#"||seen.has(w))continue;seen.add(w);
   const k=[...looseKeys(w),...alias.map(looseRoman)];
   // s: the same keys without any "a", so a dropped or extra schwa still matches (sagarmatha, nepal)
-  W.push({u:w,k,s:k.map(x=>x.replace(/a/g,"")),r:toRoman(w)})}
+  // r (the Romanized spelling) is worked out only for words that actually match, see spell()
+  W.push({u:w,k,s:k.map(x=>x.replace(/a/g,"")),r:undefined})}
  return{
   // romanized word -> best Unicode words: exact sound matches, then schwa-tolerant ones, then completions
   roman(r,max=6){const k=looseRoman(r),ks=k.replace(/a/g,"");if(!k)return[];const ex=[],near=[],pre=[];
-   for(const w of W){if(!w.r)continue;
-    if(w.k.includes(k))ex.push(w);else if(ks.length>1&&w.s.includes(ks))near.push(w);else if(k.length>1&&w.k.some(x=>x.startsWith(k)))pre.push(w)}
+   // the first `max` matches are enough, and a word with no exact Romanized spelling is skipped
+   const spell=w=>w.r===undefined?(w.r=toRoman(w.u)):w.r;
+   for(const w of W){
+    if(w.k.includes(k)){if(spell(w))ex.push(w)}
+    else if(ks.length>1&&w.s.includes(ks)){if(near.length<max&&spell(w))near.push(w)}
+    else if(k.length>1&&pre.length<max&&w.k.some(x=>x.startsWith(k))){if(spell(w))pre.push(w)}
+    if(ex.length>=max)break}
    return ex.concat(near,pre).slice(0,max)},
   // Unicode prefix -> completions
   prefix(u,max=6){if(!u)return[];return W.filter(w=>w.u.length>u.length&&w.u.startsWith(u)).slice(0,max)},

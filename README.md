@@ -13,7 +13,7 @@ Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali 
 | Feature | How to use it |
 |---|---|
 | **Romanized typing** | Type how it sounds: `ka` क, `kaa` का, `namaste` नमस्ते. A consonant alone keeps its *a* sound, and two consonants join (`kt` क्त). Works with any phone keyboard. |
-| **Dictionary suggestions** | About 800 common words, built in and offline. Loose spellings still find the word: `nepal` → नेपाल, `bikas` → विकास, `kathmandu` → काठमाडौं. Tap the blue suggestion, or press <kbd>Tab</kbd> on a computer. In font keys mode it finishes the word you're typing. |
+| **Dictionary suggestions** | Over 4,000 common words and verb forms (everyday words, places, first names and surnames, English loanwords with their English spellings, and verb endings), built in and offline. Loose spellings still find the word: `nepal` → नेपाल, `bikas` → विकास, `kathmandu` → काठमाडौं. Tap the blue suggestion, or press <kbd>Tab</kbd> on a computer. In font keys mode it finishes the word you're typing. |
 | **Live hints** | The bar above the keyboard shows what each key did and what can come next. After `k` it offers ख, का, कि and so on. Tap a hint to type it. |
 | **Devanagari font keys (Preeti layout)** | The classic font keyboard, keystroke for keystroke, as in Word or LibreOffice with the Preeti font. Use the on-screen keyboard or a physical one. ि is typed before its letter and reph र् after it; the app puts both in the right Unicode order. |
 | **Movable cursor** | In font keys mode you can insert anywhere: **tap the text**, **drag the space bar** left or right (like Gboard), or use the arrow keys, Home, End and Delete. Typing, ⌫, hints and dictionary words all work at the cursor. |
@@ -95,7 +95,7 @@ test.mjs                assertions for the converters
 
 ## Adding dictionary words
 
-Add a line to `src/data/words.txt`. Put more common words higher, because order is the ranking. For names and English loanwords, add extra spellings after the word: `काठमाडौं kathmandu ktm`. Then run `npm test`. It lists any word that can't be typed back in Romanized mode.
+Add a line to `src/data/words.txt`. Put more common words higher, because order is the ranking. The dictionary is a separate file that loads in the background after the page is ready, so a bigger list does not slow the first load. For names and English loanwords, add extra spellings after the word: `काठमाडौं kathmandu ktm`. Then run `npm test`. It lists any word that can't be typed back in Romanized mode.
 
 ## Privacy
 

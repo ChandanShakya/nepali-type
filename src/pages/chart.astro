@@ -3,6 +3,7 @@
 import "../styles/base.css";
 import {REPO, GITHUB_ICON} from "../data/site.js";
 import Cell from "../components/Cell.astro";
+import wordList from "../data/words.txt?raw";
 import {R,SH2,P,roman,toPreeti} from "../scripts/nepali.js";
 import {VOWELS,CONSONANT_ROWS,CONSONANTS,MATRAS,CONJUNCTS,PUNCT,SPECIALS,entry} from "../scripts/charts.js";
 
@@ -18,10 +19,12 @@ const words = ["namaste", "nepaal", "dhanyawaad", "kShetra", "gyaan", "shrii", "
 
 const title = "Nepali Typing Cheatsheet & Guide: Romanized Nepali and Preeti Keyboard Layout";
 const desc = "How to type Nepali: every Romanized spelling, the full Preeti / Devanagari font keyboard layout, the vowel table (बाह्रखरी), half letters, conjuncts and a guide to every Nepali Type feature.";
+// the dictionary size, rounded down to the nearest 500 so the text stays true as words are added
+const dictCount = (Math.floor(wordList.split("\n").filter((l) => l && l[0] !== "#").length / 500) * 500).toLocaleString("en");
 // every feature, documented once here: [title, how it works]
 const features: [string, string][] = [
   ["Romanized typing", "Type Nepali the way it sounds in English letters: <kbd>ka</kbd> क, <kbd>kaa</kbd> का, <kbd>namaste</kbd> नमस्ते. A consonant alone keeps its <b>a</b> sound and two consonants join (<kbd>kt</kbd> क्त). Works with any phone keyboard."],
-  ["Dictionary suggestions", "About 800 common words are built in and work offline. Loose spellings still find the word: <kbd>nepal</kbd> → नेपाल, <kbd>bikas</kbd> → विकास, <kbd>kathmandu</kbd> → काठमाडौं. Tap a blue suggestion, or press <kbd>Tab</kbd> on a computer. In font keys mode the dictionary finishes the word you are typing."],
+  ["Dictionary suggestions", `Over ${dictCount} common words and verb forms are built in and work offline. Loose spellings still find the word: <kbd>nepal</kbd> → नेपाल, <kbd>bikas</kbd> → विकास, <kbd>kathmandu</kbd> → काठमाडौं. Tap a blue suggestion, or press <kbd>Tab</kbd> on a computer. In font keys mode the dictionary finishes the word you are typing.`],
   ["Live hints", "The bar above the keyboard shows what each key did and what you can type next: after <kbd>k</kbd> it offers ख, का, कि and the rest. Tap a hint to type it."],
   ["Devanagari font keys (Preeti layout)", "The classic Devanagari font keyboard, keystroke for keystroke, as in Word or LibreOffice with the Preeti font. Use the on-screen keyboard or a physical one. <b>ि</b> is typed before its letter and reph र् after; the app puts them in the right Unicode order. Shift: tap once, twice to lock."],
   ["Movable cursor", "In font keys mode you can insert anywhere: <b>tap the text</b> to put the cursor there, <b>drag the space bar</b> left or right to move it (like Gboard), or use the arrow keys, Home, End and Delete on a keyboard. Typing, ⌫, hints and dictionary words all work at the cursor."],

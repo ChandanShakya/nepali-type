@@ -1,10 +1,11 @@
 import {R,SH,SH2,KEYS,P,conv,clean,toPreeti,toRoman,roman,ROMAN,makeDict} from "./nepali.js";
 import {VOWELS,CONSONANT_ROWS,CONSONANTS,MATRAS,CONJUNCTS,PUNCT,SPECIALS,entry,findEntries} from "./charts.js";
-import words from "../data/words.txt?raw";
 
-// the dictionary is built on first use (or when the browser is idle), not during page load
-let dictCache;const dict=()=>dictCache||(dictCache=makeDict(words));
-(window.requestIdleCallback||setTimeout)(()=>dict());
+// the dictionary is its own file, fetched and built once the page is idle: it never slows the first paint.
+// Until it arrives (or if it cannot load) there are simply no word suggestions.
+let D={roman:()=>[],prefix:()=>[],size:0};
+const dict=()=>D;
+(window.requestIdleCallback||setTimeout)(()=>import("../data/words.txt?raw").then(m=>{D=makeDict(m.default);draw()}).catch(()=>{}));
 
 const $=s=>document.querySelector(s);
 // localStorage can throw (private mode, blocked storage): the app must still work without it

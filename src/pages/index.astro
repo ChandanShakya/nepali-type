@@ -94,7 +94,8 @@ html:not(.roman) #rin{display:none}
 .bt.fav.on{color:var(--ac);border-color:var(--ac);background:var(--ac-soft)}
 .bt.fav.on svg{fill:currentColor}
 .sp{flex:1}
-#pre{padding:2px 16px 12px;min-height:44px;font:22px/1.5 PreetiL,ui-monospace,monospace;word-break:break-all;white-space:pre-wrap}
+/* the keys to press, always as plain characters: never drawn in an installed Preeti font */
+#pre{padding:2px 16px 12px;min-height:44px;font:22px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.03em;word-break:break-all;white-space:pre-wrap}
 /* font keys mode: the same text spelled the Romanized way, to learn or reuse it */
 /* one Romanized box in both modes: the input on top in Romanized mode, read-only spelling in font keys mode */
 .roman #rc{order:-1}.roman #rom{display:none}

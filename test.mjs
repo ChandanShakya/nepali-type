@@ -19,7 +19,7 @@ for(const[r,u] of [["ka","क"],["k","क"],["kaa","का"],["kt","क्त"],
 console.log("ok",words.length,"round-trips");
 
 // Unicode -> roman round trip and the dictionary
-import {toRoman,makeDict,looseRoman,toReading} from "./src/scripts/nepali.js";
+import {toRoman,makeDict,looseRoman} from "./src/scripts/nepali.js";
 import {readFileSync} from "node:fs";
 for(const w of ["नेपाल","नमस्ते","धन्यवाद","क्षेत्र","ज्ञान","गाउँ","छन्","मान्छे","गङ्गा","संसार","दुःख","आउनुहोस्","कृषि","विद्यालय","गएको","थिइन्","भई","हजुरआमा"])
  assert.equal(roman(toRoman(w)??"").u,w,"toRoman "+w);
@@ -155,15 +155,12 @@ console.log("report endpoint and issue list checked");
  assert.equal(D.roman("Hari",1).length>0,true,"a capitalised name still finds the word");
  console.log("dictionary words are found by their own spelling:",words.length)}
 
-// ---------- reading-friendly spelling (approximate): rules for the inherent a, conjuncts and nasals ----------
-{const want={नमस्ते:"namaste",नेपाल:"nepal",सरकार:"sarkar",कमल:"kamal",सुन्दर:"sundar",राम्रो:"ramro",धन्यवाद:"dhanyabad",संसार:"sansar",
-  काठमाडौं:"kathmadaun",कसरी:"kasri",घरमा:"gharma",मान्छे:"manchhe",दुःख:"duhkh",शिक्षक:"shikshak",ज्ञान:"gyan",पानी:"pani",खाना:"khana",
-  गर्छ:"garchha",हुन्छ:"hunchha",आउँछ:"aaunchha",विश्व:"bishwa",स्वागत:"swagat",आमा:"aama",मेरो:"mero",तपाईं:"tapain",छ:"chha",म:"ma",
-  उनीहरू:"uniharu",राष्ट्रियसभा:"rashtriyasabha",अन्तर्राष्ट्रिय:"antarrashtriya",सहकर्मी:"sahakarmi",विकास:"bikas",भारत:"bharat",तरकारी:"tarkari"};
- for(const[w,r] of Object.entries(want))assert.equal(toReading(w),r,w);
- // sentences keep their spacing, line breaks and punctuation
- assert.equal(toReading("मेरो नाम चन्दन हो।\nधन्यवाद"),"mero nam chandan ho.\ndhanyabad");
- // every dictionary word gets a reading that is plain lowercase letters
- const words=readFileSync("src/data/words.txt","utf8").split("\n").filter(l=>l&&l[0]!=="#").map(l=>l.split(/\s+/)[0]);
- assert.deepEqual(words.filter(w=>!/^[a-z]+$/.test(toReading(w))).slice(0,10),[],"words whose reading is not plain letters");
- console.log("reading spellings checked for",words.length,"words")}
+// ---------- Preeti mode: typed or pasted Preeti text becomes Unicode and Romanized ----------
+{const pasted="d]/f] gfd rGbg xf]. g]kfn sf7df08f}+ df lgjf; h:tf] ;/sf/ cGt/f{li6«o x'G5 .";
+ assert.equal(clean(conv(pasted)),"मेरो नाम चन्दन हो। नेपाल काठमाण्डौं मा निवास जस्तो सरकार अन्तर्राष्ट्रिय हुन्छ ।");
+ // the same text round-trips: Unicode -> Preeti keys -> Unicode, and its Romanized spelling types back to the same Unicode
+ const uni=clean(conv(pasted));assert.equal(clean(conv(toPreeti(uni))),uni);
+ assert.equal(roman(toRoman(uni)).u,uni);
+ // a paste is just text: tabs, line breaks and doubled spaces come through unchanged
+ assert.equal(clean(conv("g]kfn\n\td]/f]  gfd")),"नेपाल\n\tमेरो  नाम");
+ console.log("pasted Preeti text converts")}

@@ -9,7 +9,7 @@ const video = new URL("/demo.mp4", site).href;
 const ld = JSON.stringify({"@context":"https://schema.org","@type":"WebApplication",name:"Nepali Type",url:site,description:desc,
   applicationCategory:"UtilitiesApplication",operatingSystem:"Any (web browser)",inLanguage:["ne","en"],isAccessibleForFree:true,
   offers:{"@type":"Offer",price:"0",priceCurrency:"USD"},image:new URL("/og.png", site).href,sameAs:[REPO],
-  featureList:["Romanized Nepali typing (ka → क)","Word-by-word view with a readable Romanized reading","Built-in Nepali dictionary suggestions","Preeti / Devanagari font keyboard layout","Movable cursor: tap text or drag the space bar","Unicode and Preeti output side by side","Saved words","Printable cheatsheet","Dark mode","Works offline, installable PWA"]});
+  featureList:["Romanized Nepali typing (ka → क)","Built-in Nepali dictionary suggestions","Preeti / Devanagari font keyboard layout","Type or paste Preeti text and get Unicode and Romanized","Unicode and Preeti output side by side","Saved words","Printable cheatsheet","Dark mode","Works offline, installable PWA"]});
 const copy = '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
 const star = '<svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>';
 const book = '<svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>';
@@ -54,8 +54,6 @@ header{display:flex;align-items:center;gap:6px;padding:10px 10px 6px 14px;paddin
 .ib{width:38px;height:38px;border-radius:19px;display:grid;place-items:center;color:var(--mut);flex:none}
 .ib:hover{background:var(--surface2);color:var(--fg)}
 .gh{fill:currentColor;stroke:none}
-#mode .tx{white-space:nowrap}
-@media (max-width:360px){.hd-off #mode .d{display:none}}
 #showhd{display:none}.hd-off #showhd{display:inline-flex;flex:.8 1 0}
 /* main: scrolls on its own, the dock stays put */
 #top{flex:1;overflow:auto;overscroll-behavior:contain;padding:4px 14px 12px;min-height:0;display:flex;flex-direction:column;gap:10px}
@@ -63,31 +61,35 @@ header{display:flex;align-items:center;gap:6px;padding:10px 10px 6px 14px;paddin
 .card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);flex:none}
 /* each output box copies its own text from its corner */
 /* copy, save and clear share one button look: 38px tall, 1px border, 10px radius */
-.cc{position:absolute;top:6px;right:6px;width:38px;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--surface);display:grid;place-items:center;color:var(--fg);transition:transform .08s}
-.cc:active{transform:scale(.94)}
-.cc:hover{background:var(--surface2);color:var(--fg)}
+.cc,.pb{position:absolute;top:6px;right:6px;width:38px;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--surface);display:grid;place-items:center;color:var(--fg);transition:transform .08s}
+.cc:active,.pb:active{transform:scale(.94)}
+.cc:hover,.pb:hover{background:var(--surface2);color:var(--fg)}
+.pb{right:50px}
+.roman .pb{display:none}
+html:not(.roman) #pk .lab{padding-right:92px}
 .cc.ok{color:var(--ac);border-color:var(--ac);background:var(--ac-soft)}
 .card:has(.cc) .lab{padding-right:48px}
-.hd-off #rin,.hd-off #out,.hd-off #rom,.hd-off #pre{padding-right:48px}
-#rin{display:block;width:100%;min-height:64px;resize:vertical;border:0;border-radius:0 0 16px 16px;padding:4px 16px 12px;font:18px/1.45 ui-monospace,"SF Mono",Menlo,Consolas,monospace;background:none;color:var(--fg)}
-#rin:focus{outline:none}
-#rc:focus-within{border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-soft)}
-#rin::placeholder{color:var(--mut)}
+.hd-off #rin,.hd-off #pin,.hd-off #out,.hd-off #rom,.hd-off #pre{padding-right:48px}
+#rin,#pin{display:block;width:100%;min-height:64px;resize:vertical;border:0;border-radius:0 0 16px 16px;padding:4px 16px 12px;font:18px/1.45 ui-monospace,"SF Mono",Menlo,Consolas,monospace;background:none;color:var(--fg)}
+#rin:focus,#pin:focus{outline:none}
+#rc:focus-within,#pk:focus-within{border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-soft)}
+#rin::placeholder,#pin::placeholder{color:var(--mut)}
+#pin{font-size:20px;letter-spacing:.03em}
 .lab{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;padding:10px 16px 0}
 /* collapsed (top bar hidden): no card titles, icon-only buttons, room for the restore button */
 .hd-off .lab{display:none}
-.hd-off #rin,.hd-off #out,.hd-off #rom,.hd-off #pre{padding-top:12px}
+.hd-off #rin,.hd-off #pin,.hd-off #out,.hd-off #rom,.hd-off #pre{padding-top:12px}
 .hd-off .acts .bt .tx{display:none}
 .hd-off .acts .bt svg{display:inline-block!important}
 .hd-off .acts .bt,#cl{padding:0;width:38px}
 #out{min-height:96px;padding:4px 16px 10px;font-size:32px;line-height:1.6;word-break:break-word;white-space:pre-wrap}
 #out.e{color:var(--mut);font-size:16px;line-height:1.5;padding-top:10px}
 #out.e b{color:var(--fg)}
-/* Preeti mode cursor; tap the text to move it */
-.caret{display:inline-block;width:2px;height:1.05em;margin:0 -1px;background:var(--ac);vertical-align:-.12em;border-radius:1px;animation:blink 1.1s steps(1) infinite}
-@keyframes blink{50%{opacity:0}}
-html:not(.roman) #out,html:not(.roman) #pre{cursor:text}
 html:not(.roman) #rin{display:none}
+/* Preeti mode: the Preeti box is the input and goes first; its read-only output copy is hidden */
+.roman #pin{display:none}
+html:not(.roman) #pre{display:none}
+html:not(.roman) #pk{order:-1}
 .sm{font:italic 16px ui-monospace,monospace;color:var(--ac);border-bottom:2px dotted var(--ac);margin:0 1px}
 .acts{display:flex;gap:6px;padding:0 10px 10px;align-items:center}
 .bt{white-space:nowrap;flex:none;height:38px;min-width:38px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform .08s}
@@ -98,8 +100,8 @@ html:not(.roman) #rin{display:none}
 .sp{flex:1}
 /* the keys to press, always as plain characters: never drawn in an installed Preeti font */
 #pre{padding:2px 16px 12px;min-height:44px;font:22px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.03em;word-break:break-all;white-space:pre-wrap}
-/* font keys mode: the same text spelled the Romanized way, to learn or reuse it */
-/* one Romanized box in both modes: the input on top in Romanized mode, read-only spelling in font keys mode */
+/* Preeti mode: the same text spelled the Romanized way, to learn or reuse it */
+/* one Romanized box in both modes: the input on top in Romanized mode, read-only spelling in Preeti mode */
 .roman #rc{order:-1}.roman #rom{display:none}
 #rom{padding:2px 16px 12px;min-height:40px;font:18px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;word-break:break-word;white-space:pre-wrap;color:var(--blue)}
 #rom:empty::before{content:"Romanized spelling appears here";font:14px system-ui,sans-serif;color:var(--mut)}
@@ -177,20 +179,6 @@ a.bt{color:inherit;text-decoration:none}
 .ch .x{position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:12px;background:var(--fg);color:var(--bg);font-size:13px;line-height:24px}
 .nt{color:var(--mut);font-size:13.5px;margin:8px 0}
 li{margin:5px 0}
-/* words view: each word with its reading and its exact typing spelling */
-.pt{display:flex;gap:6px;padding:8px 14px 0}
-.tg{height:30px;padding:0 13px;border-radius:15px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;color:var(--mut)}
-.tg[aria-pressed="true"]{background:var(--ac-soft);border-color:var(--ac);color:var(--ac)}
-#pw{display:flex;flex-wrap:wrap;gap:8px 6px;padding:10px 12px 6px;align-items:flex-start}
-#pw:empty::before{content:"Type something to see it word by word.";color:var(--mut);font-size:14px;padding:4px}
-.wd{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 11px 7px;border-radius:12px;background:var(--surface2);min-width:46px;text-align:center}
-.wu{font-size:30px;line-height:1.4}
-.wr{font-size:16px;font-weight:650;color:var(--ac);line-height:1.3}
-.wt{font:11.5px/1.3 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--mut)}
-.wd.nl{flex-basis:100%;height:0;padding:0;background:none;min-width:0}
-#pw.hr .wr,#pw.ht .wt{display:none}
-#pc .pn{margin:0 16px 12px;color:var(--mut);font-size:12.5px}
-.hd-off #pc .pt{padding-right:56px}
 /* report dialog */
 #rep{border:0;padding:0;border-radius:20px;background:var(--bg);color:var(--fg);width:min(480px,calc(100% - 24px));max-height:calc(100dvh - 24px);box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:auto}
 #rep::backdrop{background:rgba(0,0,0,.55)}
@@ -250,17 +238,9 @@ li{margin:5px 0}
   <div id="out" class="d e" aria-live="polite"></div>
   <div class="acts">
    <button class="bt fav" id="fav" aria-pressed="false" aria-label="Save the last word" title="Save the last word"><Fragment set:html={star}/><span class="tx">Save</span></button>
-   <button class="bt" id="pv" aria-pressed="false" aria-label="Show the text word by word, with its reading" title="Words view"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="6" rx="1.5"/><rect x="13" y="4" width="8" height="6" rx="1.5"/><path d="M3 15h8M13 15h8M3 19h5M13 19h5"/></svg><span class="tx">Words</span></button>
    <span class="sp"></span>
    <button class="bt" id="cl" aria-label="Clear" title="Clear"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"/></svg></button>
   </div>
- </section>
- <section class="card" id="pc" hidden>
-  <div class="lab"><span>Words</span></div>
-  <button class="cc" data-copy="words" aria-label="Copy the words with their reading" title="Copy the words with their reading"><Fragment set:html={copy}/></button>
-  <div class="pt"><button class="tg" id="tg-r" aria-pressed="true" title="Friendly spelling to read aloud">Reading</button><button class="tg" id="tg-t" aria-pressed="true" title="Exact spelling you can type back">Typing</button></div>
-  <div id="pw" aria-live="polite"></div>
-  <p class="pn"><b>Reading</b> is approximate, to read aloud. <b>Typing</b> is the exact spelling: type it in Romanized mode to get the same word.</p>
  </section>
  <section class="card" id="rc">
   <div class="lab"><span>Romanized</span></div>
@@ -268,9 +248,11 @@ li{margin:5px 0}
   <textarea id="rin" placeholder="Type in English… namaste, nepal, dhanyabad" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Romanized input"></textarea>
   <div id="rom"></div>
  </section>
- <section class="card">
-  <div class="lab"><span>Preeti Keymap</span></div>
+ <section class="card" id="pk">
+  <div class="lab"><span id="pkl">Preeti Keymap</span></div>
   <button class="cc" data-copy="font" aria-label="Copy Preeti keymap text" title="Copy Preeti keymap text"><Fragment set:html={copy}/></button>
+  <button class="pb" id="paste" aria-label="Paste Preeti text" title="Paste Preeti text"><svg viewBox="0 0 24 24"><path d="M9 4h6v3H9zM9 5.5H6.5A1.5 1.5 0 0 0 5 7v12.5A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V7a1.5 1.5 0 0 0-1.5-1.5H15"/></svg></button>
+  <textarea id="pin" placeholder="Type with your keyboard or paste Preeti text, for example g]kfn d]/f]" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Preeti text: type or paste"></textarea>
   <div id="pre"></div>
  </section>
 </main>
@@ -323,7 +305,7 @@ li{margin:5px 0}
   <h2 id="introT">Type Nepali the easy way</h2>
   <ul>
    <li><b>Romanized:</b> type how it sounds. <kbd>namaste</kbd> → नमस्ते. Blue words are dictionary suggestions.</li>
-   <li><b>Font keys:</b> the Preeti Devanagari layout, just like in Word. Tap the text or drag the space bar to move the cursor.</li>
+   <li><b>Preeti:</b> type or paste Preeti text, like in Word. It becomes Unicode and Romanized at once.</li>
    <li>Unicode, Romanized and font text side by side. Copy any box. Free, offline, no sign-up.</li>
   </ul>
   <form method="dialog" class="ia"><a class="bt" href="/chart/">Cheatsheet</a><a class="bt" href={REPO} target="_blank" rel="noopener"><Fragment set:html={GITHUB_ICON}/>GitHub</a><span class="sp"></span><button class="bt p" autofocus>Start typing</button></form>

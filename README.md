@@ -13,13 +13,12 @@ Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali 
 | Feature | How to use it |
 |---|---|
 | **Romanized typing** | Type how it sounds: `ka` क, `kaa` का, `namaste` नमस्ते. A consonant alone keeps its *a* sound, and two consonants join (`kt` क्त). Works with any phone keyboard. |
-| **Dictionary suggestions** | Over 4,000 common words and verb forms (everyday words, places, first names and surnames, English loanwords with their English spellings, and verb endings), built in and offline. Loose spellings still find the word: `nepal` → नेपाल, `bikas` → विकास, `kathmandu` → काठमाडौं. Tap the blue suggestion, or press <kbd>Tab</kbd> on a computer. In font keys mode it finishes the word you're typing. |
+| **Dictionary suggestions** | Over 4,000 common words and verb forms (everyday words, places, first names and surnames, English loanwords with their English spellings, and verb endings), built in and offline. Loose spellings still find the word: `nepal` → नेपाल, `bikas` → विकास, `kathmandu` → काठमाडौं. Tap the blue suggestion, or press <kbd>Tab</kbd> on a computer. In Preeti mode it finishes the word you're typing. |
 | **Live hints** | The bar above the keyboard shows what each key did and what can come next. After `k` it offers ख, का, कि and so on. Tap a hint to type it. |
-| **Devanagari font keys (Preeti layout)** | The classic font keyboard, keystroke for keystroke, as in Word or LibreOffice with the Preeti font. Use the on-screen keyboard or a physical one. ि is typed before its letter and reph र् after it; the app puts both in the right Unicode order. |
-| **Movable cursor** | In font keys mode you can insert anywhere: **tap the text**, **drag the space bar** left or right (like Gboard), or use the arrow keys, Home, End and Delete. Typing, ⌫, hints and dictionary words all work at the cursor. |
+| **Preeti mode: type or paste** | Switch with the **Preeti** key at the bottom left (**ABC** goes back). The Preeti box is a normal text box: **type** with your keyboard exactly as you would in Word with the Preeti font, or **paste** Preeti text, for example copied from a Word file, and it becomes Unicode and Romanized at once. On a phone use the on-screen Preeti keyboard and the **Paste** button. ि is typed before its letter and reph र् after it; the app puts both in the right Unicode order. |
+| **Cursor and editing** | Click or tap in the Preeti box to place the caret, select and replace text, undo, or **drag the space bar** left or right (like Gboard) to move it. Typing, ⌫, hints, dictionary words and the on-screen keys all work at the caret. |
 | **Three outputs** | Unicode (for the web and modern apps), Romanized spelling (to learn a word or type it again) and Devanagari font keystrokes (to paste into Preeti documents). |
-| **Words view** | The **Words** button beside Save shows the text word by word: the Unicode word large, a friendly **Reading** spelling under it (`kathmadaun`, approximate, to read aloud) and the exact **Typing** spelling in small grey type (`kaaThamaaDauM`, which you can type back). Each row can be switched off, and copy gives pairs like `नमस्ते (namaste)`. |
-| **Same text in both modes** | Switching between Romanized and font keys converts your text, so nothing is lost. |
+| **Same text in both modes** | Switching between Romanized and Preeti converts your text, so nothing is lost. |
 | **Copy any box** | Each box has a copy button in its top-right corner. A tick shows which one was copied. |
 | **Saved words** | **★ Save** keeps the word before the cursor. Saved words show up in the suggestion bar and under **★ Saved** (tap to type, × to remove). |
 | **Chart and cheatsheet** | **Chart** in the bottom row and the printable [`/chart/`](https://nepali-type.chandanshakya.com.np/chart/) page show the same alphabet: vowels, consonants, the full vowel table (बाह्रखरी), half letters, conjuncts, signs, digits and specials (the extra Preeti glyphs with their Windows Alt codes, plus ॐ and ऽ). Every letter is shown with its Romanized spelling and its font keys, and tapping a letter in the app types it in the current mode. A jump bar takes you to any consonant in the vowel table, and **Find** in the app's chart looks up a letter by Romanized spelling (`kha`, `ksh`), font key (`v`, `S`) or Devanagari. The cheatsheet also has the font keyboard and the Romanized rules. |
@@ -44,11 +43,7 @@ Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali 
 
 Two consonants in a row join (`kt` → क्त). `n` before k, kh, g or gh becomes ङ (`gangaa` → गङ्गा).
 
-## Readable spelling
-
-The Words view uses `toReading()` in `src/scripts/nepali.js`. It follows Nepali rules for the inherent "a": dropped at the end of a word after a single consonant (`kamal`), kept after a conjunct or nasal (`garchha`, `aaunchha`), dropped in the second syllable (`sarkar`, `kasri`) but not before a conjunct (`namaste`, `dhanyabad`). It is a reading aid only and cannot be converted back; `toRoman()` is the exact spelling. `npm test` lists the expected spellings.
-
-## Font keys notes
+## Preeti notes
 
 - `m` is not a letter in the font layout. It is a hook that changes the letter before it: `km` फ, `pm` ऊ, `em` झ, `qm` क्र, `Qm` क्त. A stray `m` shows in red and is left out of copied text. For म type `d`.
 - `l` (ि) is typed before its letter. `{` (reph र्) is typed after it. The converter puts both in the right Unicode order.
@@ -79,7 +74,7 @@ src/
   ../.github/ISSUE_TEMPLATE/  issue forms for the report types
   pages/chart.astro     printable cheatsheet, rendered at build time
   styles/base.css       theme tokens shared by both pages
-  scripts/nepali.js     conversion logic (Preeti ⇄ Unicode, Romanized ⇄ Unicode, readable spelling), no DOM
+  scripts/nepali.js     conversion logic (Preeti ⇄ Unicode, Romanized → Unicode), no DOM
   scripts/app.js        UI: modes, keyboard, hints, dictionary, saved words, theme, install
   scripts/charts.js     the alphabet shown by the in-app chart and the cheatsheet
   components/Cell.astro one cheatsheet cell

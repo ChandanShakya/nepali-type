@@ -38,7 +38,7 @@ const book = '<svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V
 <link rel="apple-touch-icon" href="/icon-180.png">
 <script is:inline>
 // apply saved theme and top bar state before first paint so nothing flashes
-try{const t=localStorage.getItem("nw-theme");if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem("nw-hd")==="0")document.documentElement.classList.add("hd-off");const q=new URLSearchParams(location.search).get("m"),m=q==="roman"||q==="preeti"||q==="direct"?q:localStorage.getItem("nw-mode");if(m!=="preeti")document.documentElement.classList.add("roman");if(m==="direct")document.documentElement.classList.add("direct")}catch(e){document.documentElement.classList.add("roman")}
+try{const t=localStorage.getItem("nw-theme");if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem("nw-hd")==="0")document.documentElement.classList.add("hd-off");const q=new URLSearchParams(location.search).get("m");let m=q==="roman"||q==="preeti"||q==="direct"?q:localStorage.getItem("nw-mode");if(m!=="roman"&&m!=="preeti")m="direct";if(m!=="preeti")document.documentElement.classList.add("roman");if(m==="direct")document.documentElement.classList.add("direct")}catch(e){document.documentElement.classList.add("roman")}
 </script>
 <style is:global>
 .app{display:flex;flex-direction:column;height:var(--vh,100dvh);max-width:820px;margin:0 auto}

@@ -25,7 +25,7 @@ const isHalf=c=>/^.{1,4}्$/.test(P[c]||"");
 const buzz=matchMedia("(pointer:coarse)").matches&&navigator.vibrate?()=>{try{navigator.vibrate(6)}catch(e){}}:()=>{};
 
 // ?m=roman, ?m=direct or ?m=preeti (the installed app's shortcuts) picks the mode; otherwise the one used last, and a first visit starts in DEFAULT_MODE
-const DEFAULT_MODE="roman",MODES={direct:"Direct",roman:"Romanized",preeti:"Preeti"};
+const DEFAULT_MODE="direct",MODES={direct:"Direct",roman:"Romanized",preeti:"Preeti"};
 const qm=new URLSearchParams(location.search).get("m"),sm=Object.hasOwn(MODES,qm)?qm:store.get("nw-mode");
 let mode=Object.hasOwn(MODES,sm)?sm:DEFAULT_MODE;
 const fine=matchMedia("(pointer:fine)").matches;

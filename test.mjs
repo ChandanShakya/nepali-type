@@ -254,3 +254,17 @@ console.log("report endpoint and issue list checked");
 {const {PASSAGES}=await import("./src/data/passages.js");
  for(const t of PASSAGES)assert.equal(clean(conv(toPreeti(t))),t,t);
  console.log(PASSAGES.length,"practice passages round-trip")}
+
+// ---------- every dictionary word, both lists, types back exactly from its Preeti keys ----------
+{const words=[...readFileSync("src/data/words.txt","utf8").split("\n").map(l=>l.trim().split(/\s+/)[0]),...readFileSync("src/data/words-ext.txt","utf8").split("\n")].filter(w=>w&&w[0]!=="#");
+ const bad=words.filter(w=>clean(conv(toPreeti(w)))!==w);assert.deepEqual(bad,[]);
+ // त् then त्र (keys T q) is not त्त then ्र before the hook: उत्क्रोशी
+ assert.equal(clean(conv("pTqmf]zL")),"उत्क्रोशी");assert.equal(clean(conv("Qm")),"क्त");assert.equal(clean(conv("Km")),"फ्");
+ console.log(words.length,"dictionary words round-trip through Preeti")}
+
+// ---------- next-word suggestions ----------
+{const {makePairs}=await import("./src/scripts/nepali.js"),P=makePairs(readFileSync("src/data/pairs.txt","utf8"));
+ assert.equal(P.next("मेरो")[0],"नाम");assert.ok(P.next("के").includes("छ"));assert.deepEqual(P.next("zzz"),[]);
+ // every line: a word and one to four followers, all clean Devanagari
+ for(const l of readFileSync("src/data/pairs.txt","utf8").split("\n").filter(Boolean)){const w=l.split(" ");assert.ok(w.length>=2&&w.length<=5,l);assert.ok(w.every(x=>/^[ऀ-ॿ]+$/.test(x)),l)}
+ console.log("next-word pairs load")}

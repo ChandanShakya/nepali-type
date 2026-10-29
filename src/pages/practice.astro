@@ -16,7 +16,7 @@ const url = new URL("/practice/", site).href;
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <script is:inline>
-try{const t=localStorage.getItem("nw-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}
+try{const t=localStorage.getItem("nw-theme");if(t)document.documentElement.dataset.theme=t;const fs=localStorage.getItem("nw-fs");if(fs)document.documentElement.style.setProperty("--fs",fs+"px")}catch(e){}
 </script>
 <style is:global>
 html,body{height:auto}
@@ -49,7 +49,7 @@ footer a{color:var(--ac)}
 </header>
 <main class="wrap">
 <h1>Typing practice</h1>
- <p class="lead">Type the passage with the Preeti keys. The next key is underlined. Best with a computer keyboard.</p>
+ <p class="lead">Type the passage with the Preeti keys. The next key is underlined. A phone keyboard works too: the symbol key has [ ] &#123; &#125; | and the quote marks.</p>
  <div class="card">
   <div id="tg" class="d"></div>
   <div id="ks" aria-live="off"></div>

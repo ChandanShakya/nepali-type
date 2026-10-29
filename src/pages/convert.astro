@@ -16,7 +16,7 @@ const url = new URL("/convert/", site).href;
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <script is:inline>
-try{const t=localStorage.getItem("nw-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}
+try{const t=localStorage.getItem("nw-theme");if(t)document.documentElement.dataset.theme=t;const fs=localStorage.getItem("nw-fs");if(fs)document.documentElement.style.setProperty("--fs",fs+"px")}catch(e){}
 </script>
 <style is:global>
 html,body{height:auto}

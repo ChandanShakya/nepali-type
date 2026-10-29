@@ -19,15 +19,16 @@ Object.assign(P,{"\u00a1":"ज्ञ्","\u00a3":"घ्","\u00a4":"झ्","\u
 
 const K="क-ह",MT="ािीुूृेैोौंँः",CL="(?:["+K+"]्)*["+K+"](?:्र|्य)?",RX=s=>new RegExp(s,"g");
 // What m combines with, as the Preeti font draws it.
-const MOD=RX("([पउभ]|त्र|त्त)((?:्र|्य)?["+MT+"]*्?)m"),MODTO={"प":"फ","उ":"ऊ","भ":"झ","त्र":"क्र","त्त":"क्त"};
+// The base is marked (\u0005) when it comes from its own key, so त् + त्र (T q) is never read as त्त + ्र (Q) before the hook.
+const MOD=RX("\u0005(प|उ|भ|त्र|त्त)((?:्र|्य)?["+MT+"]*्?)m"),BASE=new Set("kKpeEqQ"),MODTO={"प":"फ","उ":"ऊ","भ":"झ","त्र":"क्र","त्त":"क्त"};
 
 // Preeti keystrokes -> Unicode. A stray m (one that does not follow प/उ/भ/त्र/त्त) is kept as
 // the ASCII letter "m" so the caller can show it; strip it with /m/g before copying.
 export function conv(s){
  // 0f, if, If are single Preeti letters (ण, ष, क्ष): the f is part of the letter, not a vowel sign
  s=s.replace(/0f/g,"ण").replace(/if/g,"ष").replace(/If/g,"क्ष");
- s=[...s].map(c=>P[c]??c).join("");
- s=s.replace(MOD,(a,b,c)=>MODTO[b]+c);
+ s=[...s].map(c=>BASE.has(c)?"\u0005"+P[c]:P[c]??c).join("");
+ s=s.replace(MOD,(a,b,c)=>MODTO[b]+c).replace(/\u0005/g,"");
  s=s.replace(/इ\u0002/g,"ई");
  s=s.replace(RX("\u0001("+CL+")"),"$1ि");
  s=s.replace(RX("("+CL+"["+MT+"]*)\u0002"),"र्$1");
@@ -208,7 +209,7 @@ export function makeDict(text){
     for(const w of t){
      if(w.k.includes(k)){if(spell(w))ex.push(w)}
      else if(ks.length>1&&w.s.includes(ks)){if(near.length<max&&spell(w))near.push(w)}
-     else if(k.length>1&&pre.length<max&&w.k.some(x=>x.startsWith(k))){if(spell(w))pre.push(w)}
+     else if((k.length>1||r.length>1)&&pre.length<max&&w.k.some(x=>x.startsWith(k))){if(spell(w))pre.push(w)}
      if(ex.length>=max)break}
     for(const w of ex.concat(near,pre))if(out.length<max&&!out.includes(w))out.push(w)}
    return out},
@@ -216,6 +217,10 @@ export function makeDict(text){
   prefix(u,max=6){if(!u)return[];const out=[];for(const t of T)for(const w of t){if(out.length>=max)return out;if(w.u.length>u.length&&w.u.startsWith(u))out.push(w)}return out},
   get size(){return seen.size}};
  return self}
+
+// ---------- next-word suggestions ----------
+// text: lines of "word next1 next2 …" (src/data/pairs.txt: the words that most often follow each common word)
+export function makePairs(text){const m=new Map();for(const l of text.split("\n")){const[a,...n]=l.split(" ");if(a)m.set(a,n)}return{next:u=>m.get(u)||[]}}
 
 // ---------- reading-friendly Romanization: approximate, meant to be read aloud, not typed back ----------
 // "kathmadaun", "sarkar", "garchha". Long vowels are not doubled and ट/त ड/द share one letter, so it cannot be converted

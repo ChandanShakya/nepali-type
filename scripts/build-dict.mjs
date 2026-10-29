@@ -22,11 +22,14 @@ for await(let line of rl){
   w=w.replace(/[‌‍]/g,"");
   count.set(w,(count.get(w)||0)+1)}}
 
+// Wikipedia has text that was converted from Preeti badly (ाे for ो, अा for आ, ि्र for ्रि, a vowel sign after a vowel sign, a nukta):
+// those are not words anyone types, so they are left out
+const MALFORMED=/ा[ेैॊॉ]|अ[ाौो]|एे|ि्|ु्|ी्|ृ्|ू्|[ािीुूृेैोौॉॊ][ािीुूृेैोौॉॊ]|[ंँः][ािीुूृेैोौ]|़|्[ािीुूृेैोौंँः]|[ऀ-ऄ]/;
 // letters that start a word, signs that cannot; keep clean, typeable words only
 // words that are Wikipedia page furniture, not language
 const FURNITURE=new Set("श्रेणी ढाँचा सन्दर्भ कडीहरू बाह्य अनुप्रेषण पृष्ठ सामग्रीहरू सन्दर्भसामग्रीहरू चित्र फाइल".split(" "));
 const START=/^[ऄ-हक़-ॡ]/,GOOD=/^[ऀ-ःऄ-्ॐक़-ॡ]+$/;
-const words=[...count].filter(([w,n])=>n>=MIN_COUNT&&w.length>=3&&!/[ः\u0902]$/.test(w)&&!FURNITURE.has(w)&&w.length<=14&&START.test(w)&&GOOD.test(w)&&!curated.has(w)&&!/्$/.test(w.slice(0,-1)+"x"))
+const words=[...count].filter(([w,n])=>n>=MIN_COUNT&&w.length>=3&&!/[ः\u0902]$/.test(w)&&!FURNITURE.has(w)&&w.length<=14&&START.test(w)&&GOOD.test(w)&&!MALFORMED.test(w)&&!curated.has(w)&&!/्$/.test(w.slice(0,-1)+"x"))
  .sort((a,b)=>b[1]-a[1]||(a[0]<b[0]?-1:1)).slice(0,MAX).map(([w])=>w);
 writeFileSync("src/data/words-ext.txt",words.join("\n")+"\n");
 console.log(count.size,"distinct tokens,",words.length,"words written; least frequent kept:",count.get(words.at(-1)));

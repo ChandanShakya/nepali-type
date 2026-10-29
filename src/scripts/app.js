@@ -1,4 +1,4 @@
-import {R,SH,SH2,KEYS,P,conv,clean,toPreeti,toRoman,toReading,roman,ROMAN,makeDict,looseRoman,looksLikeUnicode,looksLikePreeti,looksLikeRomanized} from "./nepali.js";
+import {R,SH,SH2,KEYS,P,conv,clean,toPreeti,toRoman,toReading,roman,ROMAN,makeDict,makePairs,looseRoman,looseKeys,looksLikeUnicode,looksLikePreeti,looksLikeRomanized} from "./nepali.js";
 import {runAt,commit,pick as dpick,revert,convertAll,hasLatin} from "./direct.js";
 import {REPO} from "../data/site.js";
 import {REPORTS} from "../data/reports.js";
@@ -11,11 +11,24 @@ const dict=()=>D;
 (window.requestIdleCallback||setTimeout)(()=>import("../data/words.txt?raw").then(m=>{D=makeDict(m.default);draw();loadExt()}).catch(()=>{}));
 // then the 45,000 common words of the Nepali Wikipedia, added in small slices so typing never stalls; they rank after the curated words
 function loadExt(){import("../data/words-ext.txt?raw").then(m=>{const L=m.default.split("\n");let i=0;
- const step=()=>{D.add(L.slice(i,i+3000).join("\n"),1);i+=3000;if(i<L.length)setTimeout(step,30);else draw()};step()}).catch(()=>{})}
+ const step=()=>{D.add(L.slice(i,i+3000).join("\n"),1);i+=3000;if(i<L.length)setTimeout(step,30);else{draw();loadPairs()}};step()}).catch(()=>{})}
+// and which word usually follows which (the 4 most common followers of 8,000 words), for the suggestion bar
+let PR={next:()=>[]};
+function loadPairs(){import("../data/pairs.txt?raw").then(m=>{PR=makePairs(m.default);draw()}).catch(()=>{})}
+
 
 const $=s=>document.querySelector(s);
 // localStorage can throw (private mode, blocked storage): the app must still work without it
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+// The pairs typed on this device (2,000 words at most) come first: what you write is what you will write again
+let own={};try{own=JSON.parse(store.get("nw-pairs"))||{}}catch(e){}
+const prevWord=t=>(t.trimEnd().match(/[\u0900-\u0963]+$/)||[""])[0];   // the word just before; none after a danda or a comma
+function ownPair(a,b){if(a.length<2||b.length<2)return;const m=own[a]||(own[a]={});m[b]=(m[b]||0)+1;delete own[a];own[a]=m;
+ const ks=Object.keys(own);if(ks.length>2000)delete own[ks[0]];store.set("nw-pairs",JSON.stringify(own))}
+function predict(a,n=4){
+ if(!a)return[];
+ const mine=Object.entries(own[a]||{}).sort((x,y)=>y[1]-x[1]).slice(0,2).map(([w])=>w);
+ return[...new Set([...mine,...PR.next(a)])].slice(0,n)}
 
 // display only: a trailing halant becomes a true half letter (halant + ZWJ)
 const dsp=u=>u.replace(/्(?=\s|$)/g,"्\u200d");
@@ -81,7 +94,7 @@ function render(u){
  // the assumed reading: the dictionary's familiar spelling when it has one (काठमाडौं: kathmandu), else the rules.
  // Hidden when it is the same as the exact spelling, because then it says nothing more.
  const asm=cu.split(/(\s+)/).map(w=>/^\s*$/.test(w)?w:dict().reading(w)??toReading(w)).join(""),exact=mode==="roman"?rin.value:$("#rom").textContent;
- $("#asm").textContent=asm;$("#ac").hidden=!asm.trim()||asm.trim().toLowerCase()===exact.trim().toLowerCase();
+ $("#asm").textContent=asm;$("#ac").hidden=mode!=="direct"&&(!asm.trim()||asm.trim().toLowerCase()===exact.trim().toLowerCase());
  $("#echo").textContent=[...cu].length>26?"…"+[...cu].slice(-26).join(""):cu;
  const cw=curWord(),on=!!cw&&favs.some(f=>f.u===cw);
  $("#fav").classList.toggle("on",on);$("#fav").setAttribute("aria-pressed",on);
@@ -199,7 +212,7 @@ function dtype(s){const v=din.value,c=din.selectionStart,run=runAt(v,c);dedit(c-
 let learn={};try{learn=JSON.parse(store.get("nw-learn"))||{}}catch(e){}
 function learnWord(run,w){const k=looseRoman(run);if(!k||!w)return;delete learn[k];learn[k]=w;const ks=Object.keys(learn);if(ks.length>500)delete learn[ks[0]];store.set("nw-learn",JSON.stringify(learn))}
 // finish the word at the caret with `word` and a space, and remember that choice
-function dtake(word){const e=dpick(din.value,din.selectionStart,word);dedit(e.from,e.to,e.text);last={end:e.from+word.length,latin:e.latin,uni:word};if(e.latin)learnWord(e.latin,word);sel=null;draw()}
+function dtake(word){const e=dpick(din.value,din.selectionStart,word),pw=prevWord(din.value.slice(0,e.from));if(pw)ownPair(pw,word);dedit(e.from,e.to,e.text);last={end:e.from+word.length,latin:e.latin,uni:word};if(e.latin)learnWord(e.latin,word);sel=null;draw()}
 // A finished word that is not a dictionary word but sounds like one becomes that word (kathmandu: काठमाडौं, not कथ्मन्दु).
 // A spelling learned on this device wins. Backspace gives the typed letters back; typing the same letters again and pressing
 // space keeps that spelling from then on. The chips still offer the literal reading.
@@ -213,7 +226,7 @@ function dinput(e){
  undone=null;sel=null;
  if(!quiet&&!(e&&(e.isComposing||/^(history|insertFrom)/.test(e.inputType||"")))&&din.selectionStart===din.selectionEnd){
   const r=commit(din.value,din.selectionStart,e&&/^insert(Composition)?Text$/.test(e.inputType)&&e.data?e.data.length:1,smart);
-  if(r){dedit(r.from,r.to,r.text);last=r.latin?{end:r.from+r.uni.length,latin:r.latin,uni:r.uni}:null}}
+  if(r){const pw=r.uni?prevWord(din.value.slice(0,r.from)):"";dedit(r.from,r.to,r.text);last=r.latin?{end:r.from+r.uni.length,latin:r.latin,uni:r.uni}:null;if(pw)ownPair(pw,r.uni)}}
  draw()}
 function drawDirect(){
  const v=din.value,c=din.selectionStart,run=runAt(v,c);
@@ -223,7 +236,12 @@ function drawDirect(){
  if(keepLit&&run!==keepLit)keepLit=null;
  const h=pasteHint();
  if(run){
-  const lu=roman(run).u,L=learn[looseRoman(run)],dw=[...(L&&L!==lu?[{u:L,r:""}]:[]),...dict().roman(run).filter(x=>x.u!==lu&&x.u!==L)];firstWord=dw[0]||null;cands=[{u:lu},...dw];
+  const lu=roman(run).u,L=learn[looseRoman(run)],k=looseRoman(run),
+   // the words that usually follow the previous word and fit the letters typed so far come first, then the dictionary
+   fit=predict(prevWord(v.slice(0,c-run.length)),8).filter(w=>w!==lu&&w!==L&&looseKeys(w).some(x=>x.startsWith(k))).map(u=>({u,r:toRoman(u)||""})),
+   seenU=new Set([lu,L,...fit.map(x=>x.u)]),
+   dw=[...(L&&L!==lu?[{u:L,r:""}]:[]),...fit,...dict().roman(run,8).filter(x=>!seenU.has(x.u))].slice(0,6);
+  firstWord=dw[0]||null;cands=[{u:lu},...dw];
   info.innerHTML=h||"<kbd>"+esc(run)+"</kbd> → <b class=d>"+dsp(lu)+"</b> &nbsp;<kbd>␣</kbd> types it"+(firstWord?" · <kbd>Tab</kbd> takes <b class=d>"+firstWord.u+"</b>":"");
   sg.appendChild(chip("c"+(sel===0?" on":""),dsp(lu),"<kbd>␣</kbd> space",()=>dtake(lu)));
   dw.forEach((x,i)=>sg.appendChild(chip("w"+(sel===i+1?" on":""),x.u,x.r?"<kbd>"+esc(x.r)+"</kbd>":"★",()=>dtake(x.u))));
@@ -233,7 +251,11 @@ function drawDirect(){
  // a word was just converted and the dictionary has nothing like it: offer to report it
  if(last&&D.size&&last.latin.length>=3&&v.slice(0,c).trimEnd().endsWith(last.uni)&&/[\u0915-\u0939]/.test(last.uni)&&!D.known(last.latin)&&!reported().includes(last.latin))
   sg.appendChild(chip("r","⚑ Report","<kbd>"+esc(last.latin)+"</kbd> is not in the dictionary",()=>reportForm("missing-word",last.latin)));
- favChips();["namaste","nepaal","dhanyawaad","maayaa"].forEach(w=>sg.appendChild(chip("",roman(w).u,"<kbd>"+w+"</kbd>",()=>dtype(roman(w).u+" "))));
+ // after a word: the words that usually come next (the starters only while there is nothing to go on)
+ const nx=/\s$/.test(v.slice(0,c))?predict(prevWord(v.slice(0,c))):[];
+ nx.forEach(w=>sg.appendChild(chip("",w,"<kbd>␣</kbd> next",()=>dtype(w+" "))));
+ favChips();
+ if(!nx.length)["namaste","nepaal","dhanyawaad","maayaa"].forEach(w=>sg.appendChild(chip("",roman(w).u,"<kbd>"+w+"</kbd>",()=>dtype(roman(w).u+" "))));
 }
 din.addEventListener("input",dinput);
 din.addEventListener("compositionend",()=>dinput());
@@ -320,7 +342,7 @@ $("#bar").append(sp,key("w pk","⌫","Backspace",back),key("w pk","↵","Enter",
 layer();
 const flash=c=>{const b=keys[SH[c]||c];if(b){b.classList.add("p");setTimeout(()=>b.classList.remove("p"),120)}};
 document.addEventListener("keydown",e=>{
- if(e.key==="Escape"){document.body.classList.remove("open");showMenu(false);return}
+ if(e.key==="Escape"){document.body.classList.remove("open");showMenu(false);showMore(false);return}
  if(e.key==="Shift"){held=true;layer();return}
  // typing with nothing focused goes into the Preeti box (on a computer)
  if(mode!=="roman"&&fine&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key.length===1&&!/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(e.target.tagName)&&!document.querySelector("dialog[open]")&&!document.body.classList.contains("open"))box().focus();
@@ -428,7 +450,7 @@ $("#rback").onclick=()=>repStep(1);
 $("#rclose").onclick=()=>rep.close();
 rep.addEventListener("close",()=>{repStep(1);if(mode!=="preeti")draw()});
 const openReport=()=>{repStep(1);rep.showModal()};
-$("#report").onclick=()=>{buzz();openReport()};
+$("#report").onclick=()=>{buzz();showMore(false);openReport()};
 // a tap outside the card closes it
 rep.addEventListener("click",e=>{if(e.target===rep)rep.close()});
 if(new URLSearchParams(location.search).has("report"))openReport();
@@ -440,12 +462,29 @@ const openIntro=()=>{intro.showModal();store.set("nw-intro","1");iv.play().catch
 intro.addEventListener("close",()=>iv.pause());
 if(!store.get("nw-intro"))openIntro();
 
+// the header's menu: tools, text size, reports
+const more=$("#more"),showMore=on=>{more.hidden=!on;$("#menu").setAttribute("aria-expanded",on)};
+$("#menu").onclick=()=>{buzz();showMore(more.hidden)};
+document.addEventListener("pointerdown",e=>{if(!more.hidden&&!e.target.closest("#more,#menu"))showMore(false)});
+// one text size for everything inside the cards (--fs); remembered
+const FS=[16,18,20,22,24,28];let fs=FS.includes(Number(store.get("nw-fs")))?Number(store.get("nw-fs")):20;
+const setFs=n=>{fs=n;document.documentElement.style.setProperty("--fs",n+"px");store.set("nw-fs",n);$("#fsv").textContent=n};
+$("#fsm").onclick=()=>setFs(FS[Math.max(0,FS.indexOf(fs)-1)]);$("#fsp").onclick=()=>setFs(FS[Math.min(FS.length-1,FS.indexOf(fs)+1)]);setFs(fs);
+// Direct mode shows one of the other forms of the text at a time
+const OUTS=["rc","ac","pk"];
+function setOut(o){document.documentElement.dataset.o=o;store.set("nw-out",o);$("#otabs").querySelectorAll("button").forEach(b=>{const on=b.dataset.o===o;b.classList.toggle("on",on);b.setAttribute("aria-selected",on)})}
+$("#otabs").onclick=e=>{const b=e.target.closest("[data-o]");if(b)setOut(b.dataset.o)};
+setOut(OUTS.includes(store.get("nw-out"))?store.get("nw-out"):"rc");
+// share the text with another app (phones, and wherever the browser offers it)
+if(navigator.share){const b=$("#share");b.hidden=false;b.onclick=()=>{const t=uni();if(!t.trim()){toast("Nothing to share yet");return}buzz();navigator.share({text:t}).catch(()=>{})}}
+
 // top bar can be hidden for more room; remembered
 const setHd=on=>{document.documentElement.classList.toggle("hd-off",!on);store.set("nw-hd",on?"1":"0")};
 $("#hidehd").onclick=()=>setHd(false);$("#showhd").onclick=()=>{buzz();setHd(true)};
 
 // iOS Safari ignores interactive-widget: size the app to the visible area so the dock sits above the keyboard
-if(window.visualViewport){const vv=visualViewport,fit=()=>{document.documentElement.style.setProperty("--vh",vv.height+"px");if(vv.offsetTop)scrollTo(0,0)};vv.addEventListener("resize",fit);fit()}
+if(window.visualViewport){const vv=visualViewport,fit=()=>{document.documentElement.style.setProperty("--vh",vv.height+"px");document.documentElement.classList.toggle("short",vv.height<520);   // keyboard open or a short window: the top bar steps aside
+  if(vv.offsetTop)scrollTo(0,0)};vv.addEventListener("resize",fit);fit()}
 
 // A new version took over while the page was open (the service worker updates itself): say so and offer a reload.
 // What was typed is saved, so reloading loses nothing. The page also asks for updates every hour it stays open.
@@ -506,18 +545,19 @@ note("s","Punctuation and digits.");cells("s",PUNCT);
 note("x","The Preeti font's extra glyphs: conjuncts, ॐ ऽ and punctuation (<kbd>Û</kbd> is !, <kbd>Ù</kbd> is ;, <kbd>÷</kbd> is /). In Windows apps they need the Alt code shown; here you just tap them.");
 grid("x",SPECIALS.map(e=>[cellHTML(e,sign(e.u)),()=>typeEntry(e)]));
 note("s","Signs: <kbd class=kr>M</kbd> <kbd>+</kbd> ं &nbsp;<kbd class=kr>~</kbd> <kbd>F</kbd> ँ &nbsp;<kbd class=kr>H</kbd> <kbd>M</kbd> ः &nbsp;<kbd class=kr>\\</kbd> <kbd>\\</kbd> halant ्. Romanized <kbd class=kr>'</kbd> keeps letters apart (<kbd class=kr>ra'aa</kbd> रआ). Font keys: <kbd>m</kbd> is a hook (<kbd>km</kbd> फ, <kbd>em</kbd> झ, <kbd>pm</kbd> ऊ).");
-$("#p-i").innerHTML="<p class=nt><button class='bt p' id=watch>▶ Watch the demo</button> <a class=bt href=/chart/>Full cheatsheet</a> <button class=bt id=helprep>⚑ Report a problem or idea</button> <a class=bt href=/issues/>Open &amp; solved reports</a> <a class=bt href='"+$(".ib[href*=github]").href+"' target=_blank rel=noopener>GitHub</a></p><ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li><b>Assumed</b>: under the Romanized box, a card shows how the text is likely said in plain letters (काठमाडौं → <i>kathmandu</i>). It has its own copy button and hides when it matches the exact spelling.</li><li>If you paste text that belongs in the other mode (Preeti keys in Romanized, or the reverse), a hint offers a one-tap switch that moves it for you. In Direct mode it converts the text in place.</li><li><b>Direct</b>: type Romanized letters straight in the Unicode box. Each word turns into Nepali when you press space, punctuation or Enter (a word that sounds exactly like a dictionary word becomes it: kathmandu → काठमाडौं). <b>Backspace right after a conversion gives your letters back</b>; <kbd>Tab</kbd> or a blue chip picks a dictionary word.</li><li>Change the mode with the key at the bottom left (<b>Direct</b>, <b>Romanized</b>, <b>Preeti</b>). <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Preeti</b> mode (pick it in the mode menu; the key then reads <b>ABC</b>): <b>type</b> with your keyboard exactly as you would in Word with the Preeti font, or <b>paste</b> Preeti text, for example copied from a Word file. It becomes Unicode and Romanized at once. On a phone use the on-screen Preeti keyboard and the <b>Paste</b> button. It is the most widely used Preeti layout, so the text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> in the Preeti box by tapping or clicking in it, dragging the space bar, or with the arrow keys. Typing, ⌫ and the on-screen keys work at the cursor.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li>Every chart cell shows the letter, its <b class=kr>Romanized spelling</b> (blue) and its <b>font keys</b> (grey). Tap it to type it in the current mode. The <a href=/chart/>cheatsheet page</a> uses the same chart.</li><li><b>Blue keys</b> on the font keyboard are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>A <span class=sm>red</span> character in the Devanagari font box has no key in the Preeti font, for example - : @ and letters like ऑ ॉ. (Some punctuation does have a glyph in the Specials tab, like <b>Û</b> for !.) It is kept as it is, but it will not show correctly in a Preeti document.</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline, updates itself, and asks you to reload when a new version is ready. Once installed, long-press the icon for shortcuts: Direct, Romanized, Preeti, Cheatsheet.</li><li><b>Direct keys</b> while a word is pending: <kbd>Space</kbd> converts it, <kbd>Tab</kbd> takes the first dictionary word, <kbd>↑</kbd> <kbd>↓</kbd> walk the suggestions (then <kbd>Space</kbd>), <kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>5</kbd> take one, <kbd>Esc</kbd> keeps it as English. A word you pick is remembered on this device.</li></ul><p class=nt><button class=bt id=dx>Export my data</button> <button class=bt id=di>Import</button> <button class=bt id=df>Forget learned spellings</button> <a class=bt href=/convert/>Convert a file</a> <a class=bt href=/practice/>Typing practice</a></p>";
+$("#p-i").innerHTML="<p class=nt><button class='bt p' id=watch>▶ Watch the demo</button> <a class=bt href=/chart/>Full cheatsheet</a> <button class=bt id=helprep>⚑ Report a problem or idea</button> <a class=bt href=/issues/>Open &amp; solved reports</a> <a class=bt href='"+REPO+"' target=_blank rel=noopener>GitHub</a></p><ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li><b>Assumed</b>: under the Romanized box, a card shows how the text is likely said in plain letters (काठमाडौं → <i>kathmandu</i>). It has its own copy button and hides when it matches the exact spelling.</li><li>If you paste text that belongs in the other mode (Preeti keys in Romanized, or the reverse), a hint offers a one-tap switch that moves it for you. In Direct mode it converts the text in place.</li><li><b>Direct</b>: type Romanized letters straight in the Unicode box. Each word turns into Nepali when you press space, punctuation or Enter (a word that sounds exactly like a dictionary word becomes it: kathmandu → काठमाडौं). <b>Backspace right after a conversion gives your letters back</b>; <kbd>Tab</kbd> or a blue chip picks a dictionary word.</li><li>Change the mode with the key at the bottom left (<b>Direct</b>, <b>Romanized</b>, <b>Preeti</b>). <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Preeti</b> mode (pick it in the mode menu; the key then reads <b>ABC</b>): <b>type</b> with your keyboard exactly as you would in Word with the Preeti font, or <b>paste</b> Preeti text, for example copied from a Word file. It becomes Unicode and Romanized at once. On a phone use the on-screen Preeti keyboard and the <b>Paste</b> button. It is the most widely used Preeti layout, so the text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> in the Preeti box by tapping or clicking in it, dragging the space bar, or with the arrow keys. Typing, ⌫ and the on-screen keys work at the cursor.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li>Every chart cell shows the letter, its <b class=kr>Romanized spelling</b> (blue) and its <b>font keys</b> (grey). Tap it to type it in the current mode. The <a href=/chart/>cheatsheet page</a> uses the same chart.</li><li><b>Blue keys</b> on the font keyboard are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>A <span class=sm>red</span> character in the Devanagari font box has no key in the Preeti font, for example - : @ and letters like ऑ ॉ. (Some punctuation does have a glyph in the Specials tab, like <b>Û</b> for !.) It is kept as it is, but it will not show correctly in a Preeti document.</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline, updates itself, and asks you to reload when a new version is ready. Once installed, long-press the icon for shortcuts: Direct, Romanized, Preeti, Cheatsheet.</li><li><b>Direct keys</b> while a word is pending: <kbd>Space</kbd> converts it, <kbd>Tab</kbd> takes the first dictionary word, <kbd>↑</kbd> <kbd>↓</kbd> walk the suggestions (then <kbd>Space</kbd>), <kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>5</kbd> take one, <kbd>Esc</kbd> keeps it as English. A word you pick is remembered on this device.</li></ul><p class=nt><button class=bt id=dx>Export my data</button> <button class=bt id=di>Import</button> <button class=bt id=df>Forget what it learned</button> <a class=bt href=/convert/>Convert a file</a> <a class=bt href=/practice/>Typing practice</a></p>";
 $("#watch").onclick=()=>{document.body.classList.remove("open");openIntro()};
 $("#helprep").onclick=()=>{document.body.classList.remove("open");openReport()};
 // your data (saved words and learned spellings) never leaves the device unless you export it
-$("#dx").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({app:"nepali-type",favs,learn})],{type:"application/json"}));a.download="nepali-type-data.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1e3)};
+$("#dx").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({app:"nepali-type",favs,learn,pairs:own})],{type:"application/json"}));a.download="nepali-type-data.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1e3)};
 $("#di").onclick=()=>{const f=document.createElement("input");f.type="file";f.accept="application/json,.json";f.onchange=async()=>{
  try{const d=JSON.parse(await f.files[0].text()),ok=x=>typeof x==="string"&&x.length<=40;
   if(d?.app!=="nepali-type")throw 0;
   for(const x of d.favs||[])if(ok(x?.u)&&!favs.some(y=>y.u===x.u))favs.push(ok(x.r)?{u:x.u,r:x.r}:{u:x.u});
   for(const[k,v] of Object.entries(d.learn||{}))if(ok(k)&&ok(v))learn[k]=v;
-  saveFavs();store.set("nw-learn",JSON.stringify(learn));toast("Imported ✓")}catch(e){toast("Not a Nepali Type data file")}};f.click()};
-$("#df").onclick=()=>{const was=learn;learn={};store.set("nw-learn","{}");toast("Learned spellings cleared","Undo",()=>{learn=was;store.set("nw-learn",JSON.stringify(learn))})};
+  for(const[a,m] of Object.entries(d.pairs||{}))if(ok(a)&&m&&typeof m==="object")for(const[b,n] of Object.entries(m))if(ok(b)&&Number.isFinite(n))(own[a]||(own[a]={}))[b]=Math.min(1e4,(own[a][b]||0)+n);
+  saveFavs();store.set("nw-learn",JSON.stringify(learn));store.set("nw-pairs",JSON.stringify(own));toast("Imported ✓")}catch(e){toast("Not a Nepali Type data file")}};f.click()};
+$("#df").onclick=()=>{const was=[learn,own];learn={};own={};store.set("nw-learn","{}");store.set("nw-pairs","{}");toast("Learned spellings and word pairs cleared","Undo",()=>{[learn,own]=was;store.set("nw-learn",JSON.stringify(learn));store.set("nw-pairs",JSON.stringify(own))})};
 }
 // Find: shows every chart entry matching the query; empty query goes back to the open tab
 let lastTab="c";

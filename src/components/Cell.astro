@@ -2,7 +2,7 @@
 // One cheatsheet cell: the letter, its Romanized spelling (blue), its font keys (grey) and other spellings.
 const { e, half = false, note } = Astro.props;
 // half letters get a ZWJ so they show their half shape; signs like ्र get a dotted circle
-const label = half ? e.u + "\u200d" : e.u.startsWith("\u094d") ? "\u25cc" + e.u : e.u;
+const label = half ? e.u + "\u200d" : /^[\u0900-\u0903\u093a-\u094f]/.test(e.u) ? "\u25cc" + e.u : e.u;
 ---
 <div class:list={["c", { h: half }]}>
   <span class="d">{label}</span>

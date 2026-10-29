@@ -12,6 +12,10 @@ A:"ब्",B:"द्य",C:"ऋ",D:"म्",E:"भ्",F:"ँ",G:"न्",H:"ज
 "1":"ज्ञ","2":"द्द","3":"घ","4":"द्ध","5":"छ","6":"ट","7":"ठ","8":"ड","9":"ढ","0":"ण्","!":"१","@":"२","#":"३","$":"४","%":"५","^":"६","&":"७","*":"८","(":"९",")":"०",
 ";":"स",":":"स्","'":"ु",'"':"ू","[":"ृ","]":"े","{":"\u0002","}":"ै","\\":"्","|":"्र","`":"ञ","~":"ञ्","+":"ं",">":"श्र","<":"?","?":"रु","/":"र",",":",",".":"।","-":"(","=":".","_":")",
 "ª":"ङ","«":"्र","¿":"रू","Í":"ङ्क","Ë":"ङ्ग","ß":"द्म","§":"ट्ट","¶":"ठ्ठ","•":"ड्ड","å":"द्व","¢":"द्घ","Ø":"्य","¥":"र्\u200d"};
+// 30 more glyphs of the font, reached with Alt codes: those where two independent tables agree (the npttf2utf map, as
+// published in the "preeti" npm package, and the table in github.com/Amunet98/lekh). Several are punctuation whose own key
+// means a letter in the font (Û is !, Ù is ;, ÷ is /, Ü is %), so that punctuation has a Preeti key after all.
+Object.assign(P,{"\u00a1":"ज्ञ्","\u00a3":"घ्","\u00a4":"झ्","\u00a9":"र","\u00b0":"ङ्ढ","\u00b1":"+","\u00b4":"झ","\u00c5":"हृ","\u00c6":"”","\u00cc":"न्न","\u00ce":"ङ्ख","\u00d2":"¨","\u00d6":"=","\u00d7":"×","\u00d9":";","\u00da":"’","\u00db":"!","\u00dc":"%","\u00dd":"ट्ठ","\u00e6":"“","\u00e7":"ॐ","\u00f7":"/","\u02c6":"फ्","\u02dc":"ऽ","\u2018":"ॅ","\u201e":"ध्र","\u2026":"‘","\u2030":"झ्","\u2039":"ङ्घ","\u203a":"द्र"});
 
 const K="क-ह",MT="ािीुूृेैोौंँः",CL="(?:["+K+"]्)*["+K+"](?:्र|्य)?",RX=s=>new RegExp(s,"g");
 // What m combines with, as the Preeti font draws it.
@@ -151,13 +155,17 @@ export function looseKeys(u,cb="n"){
   const nx=u[i+1];if(!LV[nx]&&nx!=="्"&&nx!=="ँ"&&!/[ािीुूृेैोौ]/.test(nx??""))o+="a";
  }
  o=trimA(o);
- return u.includes("ँ")&&cb==="n"?[o,...looseKeys(u,"")]:[o];
+ const ks=u.includes("ँ")&&cb==="n"?[o,...looseKeys(u,"")]:[o];
+ // people text v for भ (vayo, vaneko): loosely that is a b, so index the bh words without the h too
+ return ks.concat(ks.filter(k=>k.includes("bh")).map(k=>k.replace(/bh/g,"b")));
 }
 export function makeDict(text){
- const seen=new Set(),W=[];
+ const seen=new Set(),W=[],readings=new Map();
  for(const line of text.split("\n")){
   const[w,...alias]=line.trim().replace(/[\u200c\u200d]/g,"").split(/\s+/);if(!w||w[0]==="#"||seen.has(w))continue;seen.add(w);
-  const k=[...looseKeys(w),...alias.map(looseRoman)];
+  // an alias starting with ~ only helps matching (texting spellings: ~vayo); the first other alias is also how the word reads (kathmandu)
+  const k=[...looseKeys(w),...alias.map(a=>looseRoman(a.replace(/^~/,"")))],shown=alias.find(a=>!a.startsWith("~"));
+  if(shown)readings.set(w,shown);
   // words with ं ः ङ ञ are spelled with capital signs (M H Ng Ny): index that spelling too, so a word is always found by its own spelling
   let own;if(/[ंःङञ]/.test(w)){own=toRoman(w);if(own)k.push(looseRoman(own))}
   // s: the same keys without any "a", so a dropped or extra schwa still matches (sagarmatha, nepal)
@@ -167,6 +175,8 @@ export function makeDict(text){
  const self={
   // is this exactly a dictionary word?
   has:u=>known.has(u),
+  // how a dictionary word reads, when it has a familiar spelling (काठमाडौं: kathmandu); otherwise undefined
+  reading:u=>readings.get(u),
   // does the dictionary know what was typed: its exact result is a word, or some word matches its sounds
   known:r=>known.has(roman(r).u)||self.roman(r,1).length>0,
   // romanized word -> best Unicode words: exact sound matches, then schwa-tolerant ones, then completions
@@ -183,3 +193,57 @@ export function makeDict(text){
   prefix(u,max=6){if(!u)return[];return W.filter(w=>w.u.length>u.length&&w.u.startsWith(u)).slice(0,max)},
   size:W.length};
  return self}
+
+// ---------- reading-friendly Romanization: approximate, meant to be read aloud, not typed back ----------
+// "kathmadaun", "sarkar", "garchha". Long vowels are not doubled and ट/त ड/द share one letter, so it cannot be converted
+// back: toRoman() is the exact spelling. Rules for the inherent "a" follow Nepali:
+//  - dropped at the end of a word after a single consonant (kamal), kept after a conjunct or a nasal (garchha, bishwa, aaunchha)
+//  - dropped in the middle only before a syllable carrying ा ु ू (sarkar, gharma, lalitpur), not before य व ह (kripaya), and
+//    not before a conjunct (namaste, dhanyabad). Nepali keeps far more of these "a" than Hindi does (sahayog).
+const RD_C={"क":"k","ख":"kh","ग":"g","घ":"gh","ङ":"ng","च":"ch","छ":"chh","ज":"j","झ":"jh","ञ":"n","ट":"t","ठ":"th","ड":"d","ढ":"dh","ण":"n","त":"t","थ":"th","द":"d","ध":"dh","न":"n","प":"p","फ":"ph","ब":"b","भ":"bh","म":"m","य":"y","र":"r","ल":"l","व":"b","श":"sh","ष":"sh","स":"s","ह":"h"};
+const RD_M={"ा":"a","ि":"i","ी":"i","ु":"u","ू":"u","ृ":"ri","े":"e","ै":"ai","ो":"o","ौ":"au"};
+const RD_V={"अ":"a","आ":"aa","इ":"i","ई":"i","उ":"u","ऊ":"u","ऋ":"ri","ए":"e","ऐ":"ai","ओ":"o","औ":"au"};
+function readWord(w){
+ // unit: {c:[consonants of one cluster], d:first consonant in Devanagari, v:vowel, fixed:the vowel is written (not the inherent a), nas:ं ँ ः} or {raw}
+ const U=[];
+ for(let i=0;i<w.length;){
+  const ch=w[i];
+  if(RD_V[ch]){U.push({c:[],d:"",v:RD_V[ch],fixed:true,nas:""});i++;continue}
+  if(RD_C[ch]){
+   const c=[],d=ch;let j=i;
+   const take=()=>{if(w.startsWith("क्ष",j)){c.push("ksh");j+=3}else if(w.startsWith("ज्ञ",j)){c.push("gy");j+=3}else{c.push(w[j]==="व"&&c.length?"w":RD_C[w[j]]);j++}};
+   take();
+   while(w[j]==="्"&&RD_C[w[j+1]]){j++;take()}
+   let v="a",fixed=false;
+   if(w[j]==="्"){j++;v="";fixed=true}else if(RD_M[w[j]]){v=RD_M[w[j]];fixed=true;j++}
+   U.push({c,d,v,fixed,nas:""});i=j;continue}
+  if("ंँः".includes(ch)&&U.length&&U.at(-1).raw===undefined){U.at(-1).nas=ch;i++;continue}
+  U.push({raw:ch==="।"||ch==="॥"?".":ch});i++}
+ const S=U.map((u,i)=>i).filter(i=>U[i].raw===undefined),L=S.at(-1);
+ const has=u=>u&&(u.raw!==undefined||u.v!=="");
+ // the end of the word: the inherent a goes after a single consonant, never from a one-syllable word
+ // (a nasal ं ँ before it counts like a conjunct; -iya words keep their a: rashtriya)
+ if(S.length>1){const e=U[L],b=U[S.at(-2)];if(!e.fixed&&!e.nas&&e.c.length===1&&!"ंँ".includes(b.nas||"-")&&!(e.c[0]==="y"&&b.v==="i"))e.v=""}
+ // the middle, left to right: never the first syllable, never inside a conjunct, never ह
+ for(let i=1;i<L;i++){const u=U[i],p=U[i-1],n=U[i+1];
+  if(u.raw!==undefined||u.fixed||u.nas||u.c.length>1||u.d==="ह")continue;
+  if(has(p)&&n&&n.raw===undefined&&n.fixed&&n.c.length===1&&(n.v==="a"||n.v==="u")&&!"यवह".includes(n.d))u.v=""}
+ return U.map((u,i)=>{
+  if(u.raw!==undefined)return u.raw;
+  const nx=U[i+1],nasal=!u.nas?"":u.nas==="ः"?"h":u.nas==="ं"&&nx&&nx.c&&/^(p|ph|b|bh|m)/.test(nx.c[0]||"")?"m":"n";
+  return u.c.join("")+u.v+nasal}).join("")}
+export const toReading=u=>u.replace(/[‌‍]/g,"").split(/(\s+)/).map(w=>/^\s*$/.test(w)?w:readWord(w)).join("");
+
+// ---------- what was pasted? (so the app can offer to switch mode) ----------
+// Devanagari in it means it is already Unicode.
+export const looksLikeUnicode=t=>/[ऀ-ॿ]/.test(t);
+// Preeti spends its punctuation keys on letters ( ] is े, ; is स, { is the reph, | is ्र ) and the font's Alt-code glyphs
+// (ª « ¿ Ì …) sit beside letters; Romanized text typed with this app's scheme never has them next to a letter.
+// Not the capital-in-a-word signal: this app's Romanized scheme uses capitals itself (kaaThamaaDauM).
+export const looksLikePreeti=t=>/[A-Za-z][\][{}|;]|[\][{}|;][A-Za-z]|[¡-ÿˆ˜‘…‰‹›„]/.test(t)&&!looksLikeUnicode(t);
+// Romanized (or English) text: a speaker's share of vowels and none of Preeti's signs. Preeti spends its vowel keys on
+// consonants (a is ब, e is भ, o is य), so Preeti text has far fewer of them.
+export function looksLikeRomanized(t){
+ if(looksLikeUnicode(t)||looksLikePreeti(t))return false;
+ const letters=t.replace(/[^a-zA-Z]/g,"");
+ return letters.length>=4&&(t.match(/[aeiouAEIOU]/g)||[]).length/letters.length>=.25}

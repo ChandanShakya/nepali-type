@@ -61,7 +61,9 @@ console.log("reph/ि/conjunct combos round-trip");
  for(let i=0x21;i<0x7f;i++){const c=String.fromCharCode(i);if(clean(conv(toPreeti(c)))!==c&&!toPreeti(c,true).includes("\u0003"))miss.push(c)}
  for(let c=0x900;c<=0x97f;c++){const ch=String.fromCodePoint(c);if(/[\u0900-\u097f]/.test(toPreeti(ch))&&!toPreeti(ch,true).includes("\u0003"))miss.push(ch)}
  assert.deepEqual(miss,[],"characters passed through unflagged");
- assert.equal(toPreeti("नेपाल!",true),"g]kfn\u0003!\u0004");assert.equal(toPreeti("नेपाल!"),"g]kfn!");assert.equal(toPreeti("(ठीक?)",true),"-7Ls<_","brackets and ? have font keys");
+ assert.equal(toPreeti("नेपाल-",true),"g]kfn\u0003-\u0004");assert.equal(toPreeti("नेपाल-"),"g]kfn-");
+ // punctuation the font reaches with Alt-code glyphs has a key: ! is Û, ; is Ù, / is ÷, % is Ü
+ assert.equal(toPreeti("!;/%=+"),"ÛÙ÷ÜÖ±");assert.equal(clean(conv("ÛÙ÷ÜÖ±")),"!;/%=+");assert.equal(toPreeti("(ठीक?)",true),"-7Ls<_","brackets and ? have font keys");
  console.log("characters without a font key are flagged")}
 // र in the middle of a conjunct chain is not a reph (ट्र्ब); one that starts a syllable is
 for(const w of ["ट्र्ब","क्र्य","अर्थ","उर्दू","अन्तर्राष्ट्रिय"])assert.equal(clean(conv(toPreeti(w))),w,w);
@@ -164,3 +166,16 @@ console.log("report endpoint and issue list checked");
  // a paste is just text: tabs, line breaks and doubled spaces come through unchanged
  assert.equal(clean(conv("g]kfn\n\td]/f]  gfd")),"नेपाल\n\tमेरो  नाम");
  console.log("pasted Preeti text converts")}
+
+// Lekh-inspired: texting spellings, assumed reading, paste detection
+{const {toReading,looksLikeUnicode,looksLikePreeti,looksLikeRomanized}=await import("./src/scripts/nepali.js");
+ const D=makeDict(readFileSync("src/data/words.txt","utf8")),first=s=>D.roman(s)[0]?.u;
+ for(const[k,u] of [["vayo","भयो"],["tapaailai","तपाईंलाई"],["kosto","कस्तो"],["paila","पहिला"],["bua","बुवा"],["vako","भएको"]])
+  assert.equal(first(k),u,k);
+ assert.equal(D.reading("काठमाडौं"),"kathmandu");
+ for(const[u,r] of [["कसरी","kasari"],["ललितपुर","lalitpur"],["कृपया","kripaya"],["सहयोग","sahayog"],["सरकार","sarkar"],["गर्छ","garchha"],["धन्यवाद","dhanyabad"],["स्वागत","swagat"]])
+  assert.equal(toReading(u),r,u);
+ assert.ok(looksLikePreeti("g]kfn d]/f] gfd")&&!looksLikePreeti("namaste hajur"));
+ assert.ok(looksLikeUnicode("नेपाल")&&!looksLikeUnicode("nepal"));
+ assert.ok(looksLikeRomanized("namaste hajur")&&!looksLikeRomanized("g]kfn"));
+ console.log("texting, reading and paste detection")}

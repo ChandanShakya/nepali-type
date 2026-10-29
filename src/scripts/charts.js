@@ -20,12 +20,12 @@ for(const[k,[v]] of Object.entries(ROMAN.V))(ALT[v]??=[]).push(k);
 // p is null when the Preeti font has no keys for it (टृ: "6[" draws ट्ट in that font)
 export function entry(u){const r=toRoman(u),p=toPreeti(u);return{u,r,p:clean(conv(p))===u?p:null,alt:(ALT[u]||[]).filter(k=>k!==r)}}
 
-// Extra Preeti glyphs (typed with Alt codes in Windows apps) and Unicode-only signs.
-// r is null when there is no Romanized spelling; p is the glyph itself, or null for Unicode-only signs.
-const ascii=s=>s&&/^[\x20-\x7e]+$/.test(s)?s:null;
-export const SPECIALS=[["ª","0170"],["«","0171"],["¿","0191"],["Í","0205"],["Ë","0203"],["ß","0223"],["§","0167"],["¶","0182"],["•","0149"],["å","0229"],["¢","0162"],["Ø","0216"]]
- .map(([g,code])=>{const u=clean(conv(g));return{u,r:ascii(toRoman(u)),p:g,alt:[],code}})
- .concat(["ॐ","ऽ"].map(u=>({u,r:null,p:null,alt:[],code:null,unicode:true})));
+// Extra glyphs of the Preeti font, typed with Alt codes in Windows apps (hold Alt, type the 4-digit code on the number pad).
+// Every one converts to the letter, conjunct or punctuation shown; r is its Romanized spelling when it has an exact one.
+const ascii=s=>s&&/^[ -~]+$/.test(s)?s:null;
+export const SPECIALS=[["„","0132"],["…","0133"],["ˆ","0136"],["‰","0137"],["‹","0139"],["‘","0145"],["•","0149"],["˜","0152"],["›","0155"],["¡","0161"],["¢","0162"],["£","0163"],["¤","0164"],["¥","0165"],["§","0167"],["©","0169"],["ª","0170"],["«","0171"],["°","0176"],["±","0177"],["´","0180"],["¶","0182"],["¿","0191"],["Å","0197"],["Æ","0198"],["Ë","0203"],["Ì","0204"],["Í","0205"],["Î","0206"],["Ò","0210"],["Ö","0214"],["×","0215"],["Ø","0216"],["Ù","0217"],["Ú","0218"],["Û","0219"],["Ü","0220"],["Ý","0221"],["ß","0223"],["å","0229"],["æ","0230"],["ç","0231"],["÷","0247"]]
+ // r only when typing that spelling gives back exactly this text (the half-ra र्‍ has a hidden joiner no spelling can carry)
+ .map(([g,code])=>{const u=clean(conv(g)),r=ascii(toRoman(u));return{u,r:r&&roman(r).u===u?r:null,p:g,alt:[],code}});
 
 // every entry the chart shows, for Find; built on first search
 let index;

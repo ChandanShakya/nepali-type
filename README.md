@@ -17,15 +17,17 @@ Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali 
 | **Live hints** | The bar above the keyboard shows what each key did and what can come next. After `k` it offers ख, का, कि and so on. Tap a hint to type it. |
 | **Preeti mode: type or paste** | Switch with the **Preeti** key at the bottom left (**ABC** goes back). The Preeti box is a normal text box: **type** with your keyboard exactly as you would in Word with the Preeti font, or **paste** Preeti text, for example copied from a Word file, and it becomes Unicode and Romanized at once. On a phone use the on-screen Preeti keyboard and the **Paste** button. ि is typed before its letter and reph र् after it; the app puts both in the right Unicode order. |
 | **Cursor and editing** | Click or tap in the Preeti box to place the caret, select and replace text, undo, or **drag the space bar** left or right (like Gboard) to move it. Typing, ⌫, hints, dictionary words and the on-screen keys all work at the caret. |
+| **Assumed reading** | A card under the Romanized box shows how the text is likely said in plain letters (काठमाडौं → `kathmandu`). It has its own copy button and hides when it matches the exact spelling. Dictionary words use their familiar spelling; other words use sound rules. |
+| **Paste hints** | Preeti keys pasted into Romanized mode (or Romanized words into Preeti mode) show a one-tap switch that moves the text to the right mode. |
 | **Three outputs** | Unicode (for the web and modern apps), Romanized spelling (to learn a word or type it again) and Devanagari font keystrokes (to paste into Preeti documents). |
 | **Same text in both modes** | Switching between Romanized and Preeti converts your text, so nothing is lost. |
 | **Copy any box** | Each box has a copy button in its top-right corner. A tick shows which one was copied. |
 | **Saved words** | **★ Save** keeps the word before the cursor. Saved words show up in the suggestion bar and under **★ Saved** (tap to type, × to remove). |
-| **Chart and cheatsheet** | **Chart** in the bottom row and the printable [`/chart/`](https://nepali-type.chandanshakya.com.np/chart/) page show the same alphabet: vowels, consonants, the full vowel table (बाह्रखरी), half letters, conjuncts, signs, digits and specials (the extra Preeti glyphs with their Windows Alt codes, plus ॐ and ऽ). Every letter is shown with its Romanized spelling and its font keys, and tapping a letter in the app types it in the current mode. A jump bar takes you to any consonant in the vowel table, and **Find** in the app's chart looks up a letter by Romanized spelling (`kha`, `ksh`), font key (`v`, `S`) or Devanagari. The cheatsheet also has the font keyboard and the Romanized rules. |
+| **Chart and cheatsheet** | **Chart** in the bottom row and the printable [`/chart/`](https://nepali-type.chandanshakya.com.np/chart/) page show the same alphabet: vowels, consonants, the full vowel table (बाह्रखरी), half letters, conjuncts, signs, digits and specials (the font's 43 extra glyphs with their Windows Alt codes: conjuncts, ॐ ऽ and punctuation like `Û` for `!`). Every letter is shown with its Romanized spelling and its font keys, and tapping a letter in the app types it in the current mode. A jump bar takes you to any consonant in the vowel table, and **Find** in the app's chart looks up a letter by Romanized spelling (`kha`, `ksh`), font key (`v`, `S`) or Devanagari. The cheatsheet also has the font keyboard and the Romanized rules. |
 | **More room** | Hide the top bar with **⌃**. Card titles disappear and the buttons become icons. Bring the bar back with **⌄** in the bottom row. |
 | **Welcome video** | Plays once on your first visit. Watch it again from Chart → Help → ▶ Watch the demo. |
 | **Dark mode** | Follows your system until you choose with the moon button. |
-| **Install and offline** | Install button in Chrome, Edge and Android; on iPhone use Share → Add to Home Screen. After the first visit it works with no internet (the demo video needs a connection). |
+| **Install and offline** | Install button in Chrome, Edge and Android; on iPhone use Share → Add to Home Screen. After the first visit it works with no internet (the demo video needs a connection). The installed app updates itself and asks you to reload when a new version is ready; long-press its icon for shortcuts (Romanized, Preeti, Cheatsheet). `/?m=roman` and `/?m=preeti` open a given mode. |
 | **Report a problem or idea** | The **⚑** button in the top bar (also in Chart → Help) reports a missing word, a wrong conversion, a misspelled suggestion, a bug or an idea. **No account needed**: it is sent as an issue by the project, with an optional name. Prefer your own GitHub account? "Open on GitHub instead" opens the same report prefilled. After a word the dictionary does not know, a **⚑ Report** chip appears in the suggestion bar. |
 | **Open and solved reports** | [`/issues/`](https://nepali-type.chandanshakya.com.np/issues/) lists reports that are still open and the ones already solved. |
 | **Private** | Everything runs in your browser. Text, saved words and settings stay on your device. No account, no tracking. |
@@ -48,7 +50,7 @@ Two consonants in a row join (`kt` → क्त). `n` before k, kh, g or gh bec
 - `m` is not a letter in the font layout. It is a hook that changes the letter before it: `km` फ, `pm` ऊ, `em` झ, `qm` क्र, `Qm` क्त. A stray `m` shows in red and is left out of copied text. For म type `d`.
 - `l` (ि) is typed before its letter. `{` (reph र्) is typed after it. The converter puts both in the right Unicode order.
 - `0f`, `if`, `If` are single letters: ण, ष, क्ष.
-- A character the Preeti font has no key for (`!` `-` `:` `;`, ऑ ॉ ऽ ॐ, nukta letters) is shown in red in the font box. Those keys mean something else in the font (`!` is १, `;` is स), so the app never passes them through as if they were keys.
+- A character the Preeti font has no key for (`- : @ # & * ' " [ ] { } | ^ _ ~`, ऑ ॉ, nukta letters) is shown in red in the Preeti box. Those keys mean something else in the font (`-` is `(`, `[` is ृ), so the app never passes them through as if they were keys. Some punctuation does have a glyph, reached with an Alt code: `Û` is `!`, `Ù` is `;`, `÷` is `/`, `Ü` is `%`, `Ö` is `=`, `±` is `+`, and curly quotes. All 43 extra glyphs are in the chart's Specials tab.
 
 ## Development
 
@@ -131,3 +133,7 @@ Everything runs in your browser. Text, saved words and settings are stored only 
 ## License
 
 MIT
+
+## Credits
+
+The 30 extra Preeti glyphs were checked against two independent tables: the npttf2utf map (as in the npm `preeti` package) and [Lekh](https://github.com/Amunet98/lekh) (MIT). The idea of texting spellings (`vayo`, `tapaailai`) and of a readable "assumed" line also came from Lekh; the code here is written separately.

@@ -29,6 +29,8 @@ const features: [string, string][] = [
   ["Preeti mode: type or paste", "Switch with the <b>Preeti</b> key at the bottom left (<b>ABC</b> goes back). The Preeti box is a normal text box: <b>type</b> with your keyboard exactly as you would in Word with the Preeti font, or <b>paste</b> Preeti text, for example copied from a Word file, and it becomes Unicode and Romanized at once. On a phone use the on-screen Preeti keyboard and the <b>Paste</b> button. <b>ि</b> is typed before its letter and reph र् after it; the app puts both in the right Unicode order. <b>Shift</b>: tap once for the next key, twice to lock."],
   ["Cursor and editing", "Click or tap in the Preeti box to place the caret, select and replace text, undo, or <b>drag the space bar</b> left or right (like Gboard) to move it. Typing, ⌫, hints, dictionary words and the on-screen keys all work at the caret."],
   ["Three outputs, side by side", "Every word appears as Unicode (for the web, phones and modern apps), as Romanized spelling (to learn it or type it again) and as Devanagari font keystrokes (to paste into documents set in Preeti)."],
+  ["Assumed reading", "A card under the Romanized box shows how the text is likely said in plain letters: <kbd>काठमाडौं</kbd> → kathmandu. It has its own copy button and hides when it equals the exact spelling."],
+  ["Paste hints", "Paste Preeti keys into Romanized mode (or Romanized words into Preeti mode) and the app offers a one-tap switch that moves the text for you."],
   ["Same text in both modes", "Switching between Romanized and Preeti converts what you typed, so you never lose your text."],
   ["Copy any box", "Each box has its own copy button in the top-right corner. A tick confirms which one was copied."],
   ["Saved words", "Press <b>★ Save</b> to keep the word before the cursor. Saved words appear in the suggestion bar and under <b>★ Saved</b>, where you can tap to type them or × to remove them. They stay on your device."],
@@ -150,7 +152,7 @@ footer a{color:var(--ac)}
  <div class="grid">{signs.map(([u, n]) => <Cell e={entry(u)} note={n} />)}</div>
  <div class="grid">{PUNCT.map(entry).map(e => <Cell e={e} />)}</div>
  <h3 id="specials">Specials</h3>
- <p class="note">Extra glyphs in the Preeti font. In Windows apps type them with the Alt code (hold Alt, type the number on the keypad). ॐ and ऽ are Unicode-only: they have no font key or Romanized spelling.</p>
+ <p class="note">Extra glyphs in the Preeti font. In Windows apps type them with the Alt code (hold Alt, type the number on the keypad). They include conjuncts (न्न, ङ्ख), ॐ and ऽ, and the punctuation whose own key means a letter in the font: <kbd>Û</kbd> is !, <kbd>Ù</kbd> is ;, <kbd>÷</kbd> is /, <kbd>Ü</kbd> is %, <kbd>Ö</kbd> is =, <kbd>±</kbd> is +, and curly quotes.</p>
  <div class="grid">{SPECIALS.map(e => <Cell e={e} />)}</div>
 
  <h2 id="roman">Romanized rules <span>ka → क</span></h2>

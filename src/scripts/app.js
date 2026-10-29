@@ -1,11 +1,11 @@
-import {R,SH,SH2,KEYS,P,conv,clean,toPreeti,toRoman,roman,ROMAN,makeDict} from "./nepali.js";
+import {R,SH,SH2,KEYS,P,conv,clean,toPreeti,toRoman,toReading,roman,ROMAN,makeDict,looksLikeUnicode,looksLikePreeti,looksLikeRomanized} from "./nepali.js";
 import {REPO} from "../data/site.js";
 import {REPORTS} from "../data/reports.js";
 import {VOWELS,CONSONANT_ROWS,CONSONANTS,MATRAS,CONJUNCTS,PUNCT,SPECIALS,entry,findEntries} from "./charts.js";
 
 // the dictionary is its own file, fetched and built once the page is idle: it never slows the first paint.
 // Until it arrives (or if it cannot load) there are simply no word suggestions.
-let D={roman:()=>[],prefix:()=>[],known:()=>true,has:()=>false,size:0};
+let D={roman:()=>[],prefix:()=>[],known:()=>true,reading:()=>undefined,has:()=>false,size:0};
 const dict=()=>D;
 (window.requestIdleCallback||setTimeout)(()=>import("../data/words.txt?raw").then(m=>{D=makeDict(m.default);draw()}).catch(()=>{}));
 
@@ -23,7 +23,9 @@ const isHalf=c=>/^.{1,4}्$/.test(P[c]||"");
 // a short tick on touch screens only; desktops have no vibration motor
 const buzz=matchMedia("(pointer:coarse)").matches&&navigator.vibrate?()=>{try{navigator.vibrate(6)}catch(e){}}:()=>{};
 
-let mode=store.get("nw-mode")==="preeti"?"preeti":"roman";
+// ?m=roman or ?m=preeti (the installed app's shortcuts) picks the mode; otherwise the one used last
+const qm=new URLSearchParams(location.search).get("m");
+let mode=(qm==="roman"||qm==="preeti"?qm:store.get("nw-mode"))==="preeti"?"preeti":"roman";
 const fine=matchMedia("(pointer:fine)").matches;
 let held=false,shift=0;
 const out=$("#out"),rin=$("#rin"),pin=$("#pin"),info=$("#info"),sg=$("#sug");
@@ -67,6 +69,11 @@ function render(u){
  if(mode==="preeti")$("#rom").textContent=clean(u).split(/(\s+)/).map(w=>/\S/.test(w)?toRoman(w)??w:w).join("");
  // the read-only Preeti copy, with characters that have no key marked (shown in Romanized mode)
  if(mode==="roman")$("#pre").innerHTML=keysHTML(toPreeti(uni(),true));
+ // the assumed reading: the dictionary's familiar spelling when it has one (काठमाडौं: kathmandu), else the rules.
+ // Hidden when it is the same as the exact spelling, because then it says nothing more.
+ const asm=clean(u).split(/(\s+)/).map(w=>/^\s*$/.test(w)?w:dict().reading(w)??toReading(w)).join(""),exact=mode==="roman"?rin.value:$("#rom").textContent;
+ $("#asm").textContent=asm;$("#ac").hidden=!asm.trim()||asm.trim().toLowerCase()===exact.trim().toLowerCase();
+ $("#echo").textContent=clean(u).length>26?"…"+[...clean(u)].slice(-26).join(""):clean(u);
  const cw=curWord(),on=!!cw&&favs.some(f=>f.u===cw);
  $("#fav").classList.toggle("on",on);$("#fav").setAttribute("aria-pressed",on);
 }
@@ -98,8 +105,7 @@ function drawPreeti(last){
   else msg=ks(last)+" → <b class=d>"+(last.length>1?sign(clean(conv(last))):lab(last))+"</b>";
   if(w){const wu=clean(conv(w)),r=toRoman(wu);msg+=" &nbsp;word <b class=d>"+dsp(wu)+"</b>"+(r?" = <kbd>"+esc(r)+"</kbd>":"")}
  }
- // pasted Unicode has no Preeti keys: say where to convert it
- if(!msg&&/[\u0900-\u097f]/.test(pin.value))msg="This has Devanagari letters, which have no Preeti keys. To turn Unicode into Preeti, paste it in <b>Romanized</b> mode.";
+ if(!msg)msg=pasteHint();
  info.innerHTML=msg;// empty until a key is typed, so the dock stays small
  sg.innerHTML="";
  // dictionary: finish the word being typed
@@ -115,6 +121,17 @@ function drawPreeti(last){
  if(!sg.children.length)favChips();
 }
 
+// What was pasted may belong in the other mode: say so, with a button that moves it there.
+function pasteHint(){
+ const t=(mode==="roman"?rin.value:pin.value).trim();if(t.length<4)return"";
+ const go=(to,label)=>" <button class=lnk data-sw="+to+">"+label+"</button>";
+ if(mode==="roman")return looksLikePreeti(t)?"Looks like <b>Preeti</b> text."+go("preeti","Switch to Preeti"):"";
+ if(looksLikeUnicode(t))return "Already Unicode: Preeti has no keys for it. To get Preeti, use Romanized."+go("roman","Move it there");
+ return looksLikeRomanized(t)?"Looks like <b>Romanized</b> text."+go("roman","Move it to Romanized"):""}
+info.addEventListener("click",e=>{const b=e.target.closest("[data-sw]");if(!b)return;const to=b.dataset.sw;
+ if(to==="roman"){rin.value=pin.value;pin.value=""}else{pin.value=rin.value;rin.value=""}
+ setMode(to);toast("Moved to "+(to==="roman"?"Romanized":"Preeti"))});
+
 // ---------- Romanized mode ----------
 const VOW=["a","aa","i","ii","u","uu","e","ai","o","au","R"];
 const ALL=Object.keys(ROMAN.C).concat(Object.keys(ROMAN.V));
@@ -122,7 +139,8 @@ function insert(s){const a=rin.selectionStart,b=rin.selectionEnd;rin.setRangeTex
 // replace the romanized word before the caret with a dictionary word
 let firstWord=null;
 function pick(r){const e=rin.selectionEnd,a=e-rin.value.slice(0,e).split(/\s/).pop().length;rin.setRangeText(r+" ",a,e,"end");rin.focus();draw()}
-function drawRoman(){
+function drawRoman(){drawRomanMain();const h=pasteHint();if(h)info.innerHTML=h}
+function drawRomanMain(){
  const v=rin.value;
  render(roman(v).u);
  const word=v.slice(0,rin.selectionEnd??v.length).split(/\s/).pop(),toks=roman(word).toks,last=toks.at(-1);
@@ -215,8 +233,8 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden)unheld()});
 
 // toast with an optional action (used for Undo)
 const tEl=$("#t");let tt;
-function toast(m,act,fn){tEl.firstChild.textContent=m;const b=tEl.lastChild;b.textContent=act||"";b.onclick=()=>{fn();tEl.classList.remove("on")};
- tEl.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>tEl.classList.remove("on"),act?4000:1200)}
+function toast(m,act,fn,ms){tEl.firstChild.textContent=m;const b=tEl.lastChild;b.textContent=act||"";b.onclick=()=>{fn();tEl.classList.remove("on")};
+ tEl.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>tEl.classList.remove("on"),ms||(act?4000:1200))}
 // copy: report the real result, with a fallback for browsers/contexts that block the clipboard API
 function cp(s){
  if(!s){toast("Nothing to copy yet");return}
@@ -225,7 +243,7 @@ function cp(s){
 // corner copy buttons; the icon turns into a tick briefly so the box that was copied is clear
 const TICK='<svg viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>';
 document.querySelectorAll(".cc").forEach(b=>{const icon=b.innerHTML;b.onclick=()=>{
- const k=b.dataset.copy,s=k==="uni"?uni():k==="font"?preeti():mode==="roman"?rin.value:$("#rom").textContent;cp(s);if(!s)return;
+ const k=b.dataset.copy,s=k==="uni"?uni():k==="assumed"?$("#asm").textContent:k==="font"?preeti():mode==="roman"?rin.value:$("#rom").textContent;cp(s);if(!s)return;
  b.innerHTML=TICK;b.classList.add("ok");setTimeout(()=>{b.innerHTML=icon;b.classList.remove("ok")},1200)}});
 $("#cl").onclick=()=>{
  const box=mode==="roman"?rin:pin,was=box.value;if(!was)return;
@@ -324,6 +342,13 @@ $("#hidehd").onclick=()=>setHd(false);$("#showhd").onclick=()=>{buzz();setHd(tru
 // iOS Safari ignores interactive-widget: size the app to the visible area so the dock sits above the keyboard
 if(window.visualViewport){const vv=visualViewport,fit=()=>{document.documentElement.style.setProperty("--vh",vv.height+"px");if(vv.offsetTop)scrollTo(0,0)};vv.addEventListener("resize",fit);fit()}
 
+// A new version took over while the page was open (the service worker updates itself): say so and offer a reload.
+// What was typed is saved, so reloading loses nothing. The page also asks for updates every hour it stays open.
+if("serviceWorker" in navigator){
+ const had=!!navigator.serviceWorker.controller;   // false on the very first visit, which is not an update
+ navigator.serviceWorker.addEventListener("controllerchange",()=>{if(had)toast("A new version is ready","Reload",()=>location.reload(),15000)});
+ navigator.serviceWorker.ready.then(r=>setInterval(()=>r.update().catch(()=>{}),36e5)).catch(()=>{})}
+
 // install (PWA): Chrome/Edge/Android fire beforeinstallprompt; elsewhere the button stays hidden
 let deferred;const inst=$("#inst");
 addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;inst.hidden=false});
@@ -372,10 +397,10 @@ note("h","A half letter joins the next one: <kbd class=kr>k</kbd>+<kbd class=kr>
 grid("h",CONSONANTS.map(c=>{const e=entry(c+"्");return[cellHTML(e),()=>typeEntry(e),"h"]}));
 note("j","Common conjuncts.");cells("j",CONJUNCTS);
 note("s","Punctuation and digits.");cells("s",PUNCT);
-note("x","Extra font glyphs. In Windows apps they need the Alt code shown; here you just tap them. ॐ and ऽ are Unicode-only.");
-grid("x",SPECIALS.map(e=>[cellHTML(e,e.u.startsWith("्")?"◌"+e.u:dsp(e.u)),()=>typeEntry(e)]));
+note("x","The Preeti font's extra glyphs: conjuncts, ॐ ऽ and punctuation (<kbd>Û</kbd> is !, <kbd>Ù</kbd> is ;, <kbd>÷</kbd> is /). In Windows apps they need the Alt code shown; here you just tap them.");
+grid("x",SPECIALS.map(e=>[cellHTML(e,sign(e.u)),()=>typeEntry(e)]));
 note("s","Signs: <kbd class=kr>M</kbd> <kbd>+</kbd> ं &nbsp;<kbd class=kr>~</kbd> <kbd>F</kbd> ँ &nbsp;<kbd class=kr>H</kbd> <kbd>M</kbd> ः &nbsp;<kbd class=kr>\\</kbd> <kbd>\\</kbd> halant ्. Romanized <kbd class=kr>'</kbd> keeps letters apart (<kbd class=kr>ra'aa</kbd> रआ). Font keys: <kbd>m</kbd> is a hook (<kbd>km</kbd> फ, <kbd>em</kbd> झ, <kbd>pm</kbd> ऊ).");
-$("#p-i").innerHTML="<p class=nt><button class='bt p' id=watch>▶ Watch the demo</button> <a class=bt href=/chart/>Full cheatsheet</a> <button class=bt id=helprep>⚑ Report a problem or idea</button> <a class=bt href=/issues/>Open &amp; solved reports</a> <a class=bt href='"+$(".ib[href*=github]").href+"' target=_blank rel=noopener>GitHub</a></p><ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li>Switch modes with the <b>ABC / ⌨</b> key at the bottom left. <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Preeti</b> mode (the <b>Preeti</b> key at the bottom left, <b>ABC</b> to go back): <b>type</b> with your keyboard exactly as you would in Word with the Preeti font, or <b>paste</b> Preeti text, for example copied from a Word file. It becomes Unicode and Romanized at once. On a phone use the on-screen Preeti keyboard and the <b>Paste</b> button. It is the most widely used Preeti layout, so the text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> in the Preeti box by tapping or clicking in it, dragging the space bar, or with the arrow keys. Typing, ⌫ and the on-screen keys work at the cursor.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li>Every chart cell shows the letter, its <b class=kr>Romanized spelling</b> (blue) and its <b>font keys</b> (grey). Tap it to type it in the current mode. The <a href=/chart/>cheatsheet page</a> uses the same chart.</li><li><b>Blue keys</b> on the font keyboard are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>A <span class=sm>red</span> character in the Devanagari font box has no key in the Preeti font, for example ! - : ; and letters like ऑ ॉ. It is kept as it is, but it will not show correctly in a Preeti document.</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline.</li></ul>";
+$("#p-i").innerHTML="<p class=nt><button class='bt p' id=watch>▶ Watch the demo</button> <a class=bt href=/chart/>Full cheatsheet</a> <button class=bt id=helprep>⚑ Report a problem or idea</button> <a class=bt href=/issues/>Open &amp; solved reports</a> <a class=bt href='"+$(".ib[href*=github]").href+"' target=_blank rel=noopener>GitHub</a></p><ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li><b>Assumed</b>: under the Romanized box, a card shows how the text is likely said in plain letters (काठमाडौं → <i>kathmandu</i>). It has its own copy button and hides when it matches the exact spelling.</li><li>If you paste text that belongs in the other mode (Preeti keys in Romanized, or the reverse), a hint offers a one-tap switch that moves it for you.</li><li>Switch modes with the <b>ABC / ⌨</b> key at the bottom left. <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Preeti</b> mode (the <b>Preeti</b> key at the bottom left, <b>ABC</b> to go back): <b>type</b> with your keyboard exactly as you would in Word with the Preeti font, or <b>paste</b> Preeti text, for example copied from a Word file. It becomes Unicode and Romanized at once. On a phone use the on-screen Preeti keyboard and the <b>Paste</b> button. It is the most widely used Preeti layout, so the text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> in the Preeti box by tapping or clicking in it, dragging the space bar, or with the arrow keys. Typing, ⌫ and the on-screen keys work at the cursor.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li>Every chart cell shows the letter, its <b class=kr>Romanized spelling</b> (blue) and its <b>font keys</b> (grey). Tap it to type it in the current mode. The <a href=/chart/>cheatsheet page</a> uses the same chart.</li><li><b>Blue keys</b> on the font keyboard are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>A <span class=sm>red</span> character in the Devanagari font box has no key in the Preeti font, for example - : @ and letters like ऑ ॉ. (Some punctuation does have a glyph in the Specials tab, like <b>Û</b> for !.) It is kept as it is, but it will not show correctly in a Preeti document.</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline, updates itself, and asks you to reload when a new version is ready. Once installed, long-press the icon for shortcuts: Romanized, Preeti, Cheatsheet.</li></ul>";
 $("#watch").onclick=()=>{document.body.classList.remove("open");openIntro()};
 $("#helprep").onclick=()=>{document.body.classList.remove("open");openReport()};
 }

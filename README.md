@@ -52,7 +52,7 @@ Two consonants in a row join (`kt` → क्त). `n` before k, kh, g or gh bec
 - `m` is not a letter in the font layout. It is a hook that changes the letter before it: `km` फ, `pm` ऊ, `em` झ, `qm` क्र, `Qm` क्त. A stray `m` shows in red and is left out of copied text. For म type `d`.
 - `l` (ि) is typed before its letter. `{` (reph र्) is typed after it. The converter puts both in the right Unicode order.
 - `0f`, `if`, `If` are single letters: ण, ष, क्ष.
-- A character the Preeti font has no key for (`- : @ # & * ' " [ ] { } | ^ _ ~`, ऑ ॉ, nukta letters) is shown in red in the Preeti box. Those keys mean something else in the font (`-` is `(`, `[` is ृ), so the app never passes them through as if they were keys. Some punctuation does have a glyph, reached with an Alt code: `Û` is `!`, `Ù` is `;`, `÷` is `/`, `Ü` is `%`, `Ö` is `=`, `±` is `+`, and curly quotes. All 43 extra glyphs are in the chart's Specials tab.
+- A character the Preeti font has no key for (`- : @ # & * ' " [ ] { } | ^ _ ~`, ऑ ॉ, nukta letters) is shown in red in the Preeti box. Those keys mean something else in the font (`-` is `(`, `[` is ृ), so the app never passes them through as if they were keys. Some punctuation does have a glyph, reached with an Alt code: `Û` is `!`, `Ù` is `;`, `÷` is `/`, `Ü` is `%`, `Ö` is `=`, `±` is `+`, and curly quotes. All 43 extra glyphs are in the chart's Specials tab. The rakar after the round letters ट ठ ड ढ छ ङ is typed `«`, not `|` (the font draws `|` there as a broken ढ), so राष्ट्रिय is `/fli6«o`.
 
 ## Development
 
@@ -140,3 +140,4 @@ MIT
 ## Credits
 
 The 30 extra Preeti glyphs were checked against two independent tables: the npttf2utf map (as in the npm `preeti` package) and [Lekh](https://github.com/Amunet98/lekh) (MIT). The idea of texting spellings (`vayo`, `tapaailai`) and of a readable "assumed" line also came from Lekh; the code here is written separately.
+Several fixes (commas in Preeti output, the rakar after round letters, backspace on phone keyboards, sarkar/pradhanmantri spellings) came from testing and feedback by the author of Lekh and r/technepal.

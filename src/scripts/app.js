@@ -181,7 +181,7 @@ function drawRomanMain(){
 // ---------- Direct mode: type Romanized letters into the text box, Devanagari replaces them when the word ends ----------
 // The letters stay in the box while a word is typed (so every keyboard, including phone keyboards that compose text, behaves),
 // the chips above the keyboard show what it will become, and space, punctuation or a chip converts it.
-let last=null,quiet=false,raf;   // last: the conversion just made {end,latin,uni}, so Backspace can give the letters back
+let last=null,quiet=false,raf,undone=null;   // last: the conversion just made {end,latin,uni}, so Backspace can give the letters back
 // replace din[from,to) with text. execCommand keeps the browser's own undo (Ctrl+Z undoes a conversion); quiet stops our own edit being converted again
 function dedit(from,to,text){
  quiet=true;
@@ -194,8 +194,11 @@ function dtype(s){const v=din.value,c=din.selectionStart,run=runAt(v,c);dedit(c-
 function dtake(word){const e=dpick(din.value,din.selectionStart,word);dedit(e.from,e.to,e.text);last={end:e.from+word.length,latin:e.latin,uni:word};draw()}
 // a finished word that is not a dictionary word but sounds exactly like one becomes that word (kathmandu: काठमाडौं, not कथ्मन्दु).
 // Backspace gives the typed letters back, and the chips still offer the literal reading.
-const smart=(run,lit)=>{if(run.length<3||!D.size||D.has(lit))return null;const w=D.exact(run);return w&&w.u!==lit?w.u:null};
+const smart=(run,lit)=>{if(run.length<3||!D.size||D.has(lit))return null;const w=D.best(run);return w&&w.u!==lit?w.u:null};
 function dinput(e){
+ // Backspace that could not be cancelled (phone keyboards): the delete already happened, so put the text back and revert instead
+ if(undone&&e&&e.inputType==="deleteContentBackward"){const u=undone;undone=null;din.value=u.v;din.setSelectionRange(u.at,u.at);dedit(u.r.from,u.r.to,u.r.text);last=null;draw();return}
+ undone=null;
  if(!quiet&&!(e&&(e.isComposing||/^(history|insertFrom)/.test(e.inputType||"")))&&din.selectionStart===din.selectionEnd){
   const r=commit(din.value,din.selectionStart,e&&/^insert(Composition)?Text$/.test(e.inputType)&&e.data?e.data.length:1,smart);
   if(r){dedit(r.from,r.to,r.text);last=r.latin?{end:r.from+r.uni.length,latin:r.latin,uni:r.uni}:null}}
@@ -222,9 +225,11 @@ din.addEventListener("input",dinput);
 din.addEventListener("compositionend",()=>dinput());
 // Backspace straight after a conversion gives the typed letters back to edit
 din.addEventListener("beforeinput",e=>{
- if(e.inputType!=="deleteContentBackward"||!e.cancelable||din.selectionStart!==din.selectionEnd)return;
+ undone=null;
+ if(e.inputType!=="deleteContentBackward"||din.selectionStart!==din.selectionEnd)return;
  const r=revert(din.value,din.selectionStart,last);if(!r)return;
- e.preventDefault();dedit(r.from,r.to,r.text);last=null;draw()});
+ if(e.cancelable){e.preventDefault();dedit(r.from,r.to,r.text);last=null;draw()}
+ else undone={v:din.value,at:din.selectionStart,r}});
 // Tab takes the first dictionary word, like a phone keyboard's middle suggestion
 din.addEventListener("keydown",e=>{if(e.key==="Tab"&&!e.shiftKey&&firstWord&&!e.ctrlKey&&!e.altKey){e.preventDefault();dtake(firstWord.u)}});
 din.addEventListener("keyup",e=>{if(e.key.startsWith("Arrow")||e.key==="Home"||e.key==="End")draw()});
@@ -313,6 +318,8 @@ function cp(s){
  if(!s){toast("Nothing to copy yet");return}
  const fb=()=>{let ok=false;try{const a=document.createElement("textarea");a.value=s;a.setAttribute("readonly","");a.style.cssText="position:fixed;top:0;left:0;opacity:0";document.body.appendChild(a);a.select();a.setSelectionRange(0,s.length);ok=document.execCommand("copy");a.remove()}catch(e){}toast(ok?"Copied ✓":"Copy failed")};
  if(navigator.clipboard?.writeText)navigator.clipboard.writeText(s).then(()=>toast("Copied ✓"),fb);else fb()}
+// the Unicode box shows a trailing halant as a half letter with a joiner (display only): selected text copies without it
+out.addEventListener("copy",e=>{const s=String(getSelection()).replace(/\u200d/g,"");if(!s)return;e.clipboardData.setData("text/plain",s);e.preventDefault()});
 // corner copy buttons; the icon turns into a tick briefly so the box that was copied is clear
 const TICK='<svg viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>';
 document.querySelectorAll(".cc").forEach(b=>{const icon=b.innerHTML;b.onclick=()=>{

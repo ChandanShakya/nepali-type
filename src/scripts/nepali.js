@@ -42,8 +42,12 @@ export const clean=u=>u.replace(/m/g,"");
 
 // Unicode -> Preeti keystrokes. Built from conv itself, so the two can never disagree.
 const T={"ि":"l","\u0002":"{"};
+// keys that are their own character (the comma): the loop below would otherwise map "," to ",m", since m is dropped from the result
+KEYS.forEach(k=>{if(k!=="m"&&conv(k)===k)T[k]=k});
 ["cf]","cf}","O{","P]","f]","f}",...KEYS,...Object.keys(P).filter(c=>c>"~"),...KEYS.map(k=>k+"f"),...KEYS.map(k=>k+"m")].forEach(k=>{
  if(/[{l]/.test(k)&&k!=="O{")return;const u=clean(conv(k));if(u&&u!==k&&!(u in T))T[u]=k});
+// ट ठ ड ढ छ ङ are round: the rakar after them is « (the font draws | as a broken ढ there), so राष्ट्रिय is /fli6«o
+for(const r of "टठडढछङ")if(T[r])T[r+"्र"]=T[r]+"«";
 const TMAX=Math.max(...Object.keys(T).map(u=>u.length));
 // A character the font has no key for: Devanagari letters it lacks (ऑ ॉ ऽ ॐ …) and ASCII symbols whose keys mean
 // something else in the font (! is १, - is "(", ; is स). With mark set, such a character is wrapped in \u0003 … \u0004
@@ -179,8 +183,12 @@ export function makeDict(text){
   reading:u=>readings.get(u),
   // does the dictionary know what was typed: its exact result is a word, or some word matches its sounds
   known:r=>known.has(roman(r).u)||self.roman(r,1).length>0,
-  // the dictionary word that sounds exactly like what was typed (kathmandu: काठमाडौं), if there is one
-  exact(r){const k=looseRoman(r);if(!k)return;for(const w of W)if(w.k.includes(k)){if(w.r===undefined)w.r=toRoman(w.u);if(w.r)return w}},
+  // the dictionary word that sounds like what was typed (kathmandu: काठमाडौं); failing that, one that differs only in
+  // its inherent a's (sarkar: सरकार, pradhanmantri: प्रधानमन्त्री). Earlier words rank higher.
+  best(r){const k=looseRoman(r);if(!k)return;const ks=k.replace(/a/g,"");let near;
+   const ok=w=>{if(w.r===undefined)w.r=toRoman(w.u);return w.r};
+   for(const w of W){if(w.k.includes(k)&&ok(w))return w;if(!near&&ks.length>2&&w.s.includes(ks)&&ok(w))near=w}
+   return near},
   // romanized word -> best Unicode words: exact sound matches, then schwa-tolerant ones, then completions
   roman(r,max=6){const k=looseRoman(r),ks=k.replace(/a/g,"");if(!k)return[];const ex=[],near=[],pre=[];
    // the first `max` matches are enough, and a word with no exact Romanized spelling is skipped

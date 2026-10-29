@@ -209,9 +209,20 @@ console.log("report endpoint and issue list checked");
   const x="ma ghar",y=commit(x,x.length,3);assert.equal(y,null);   // only "ar" typed: still part of the word
   assert.equal(commit("'a ",3,3).text,"'अ ")}   // a quote mark stays
  // the dictionary spelling wins when the literal reading is not a word (kathmandu is काठमाडौं, not कथ्मन्दु)
- {const D=makeDict(readFileSync("src/data/words.txt","utf8")),smart=(run,lit)=>{if(run.length<3||D.has(lit))return null;const w=D.exact(run);return w&&w.u!==lit?w.u:null};
+ {const D=makeDict(readFileSync("src/data/words.txt","utf8")),smart=(run,lit)=>{if(run.length<3||D.has(lit))return null;const w=D.best(run);return w&&w.u!==lit?w.u:null};
   const typeS=s=>{let v="",c=0;for(const ch of s){v+=ch;c++;const r=commit(v,c,1,smart);if(r){v=v.slice(0,r.from)+r.text;c=v.length}}return v};
   assert.equal(typeS("kathmandu "),"काठमाडौं ");assert.equal(typeS("vayo "),"भयो ");assert.equal(typeS("tapaailai "),"तपाईंलाई ");
   assert.equal(typeS("ma "),"म ");assert.equal(typeS("namaste "),"नमस्ते ");
+  assert.equal(typeS("pradhanmantri "),"प्रधानमन्त्री ");assert.equal(typeS("sarkar "),"सरकार ");assert.equal(typeS("ghar "),"घर ");
   assert.equal(commit("kathmandu hajur ",16,16,smart).text,"काठमाडौं हजुर ")}
  console.log("direct mode converts words in place")}
+
+// ---------- Preeti output: reported by testers ----------
+{// a comma is a comma, not ,m
+ assert.equal(toPreeti("तिमी, म"),"ltdL, d");assert.equal(clean(conv(toPreeti("तिमी, म"))),"तिमी, म");
+ // ट्र and the other round letters take « for the rakar (| draws a broken ढ), so राष्ट्रिय is /fli6«o
+ assert.equal(toPreeti("राष्ट्रिय"),"/fli6«o");
+ for(const w of ["राष्ट्रिय","ट्रक","ड्रम","छ्र","ठ्र","ढ्र","ङ्र","क्रम","त्रि","श्री"])assert.equal(clean(conv(toPreeti(w))),w,w);
+ // Preeti to Unicode never adds a joiner after a final halant
+ assert.equal(conv(";G"),"सन्");assert.ok(!/\u200d/.test(clean(conv("g]kfn ;G"))));
+ console.log("commas, round-letter rakar, no joiner")}

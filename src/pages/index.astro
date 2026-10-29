@@ -101,7 +101,7 @@ html:not(.roman) #rin{display:none}
 .roman #rc{order:-1}.roman #rom{display:none}
 #rom{padding:2px 16px 12px;min-height:40px;font:18px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;word-break:break-word;white-space:pre-wrap;color:var(--blue)}
 #rom:empty::before{content:"Romanized spelling appears here";font:14px system-ui,sans-serif;color:var(--mut)}
-#pre:empty::before{content:"Devanagari font keystrokes appear here";font:14px system-ui,sans-serif;color:var(--mut)}
+#pre:empty::before{content:"Preeti keystrokes appear here";font:14px system-ui,sans-serif;color:var(--mut)}
 @media (min-width:700px){#out{font-size:36px}}
 /* dock: hints, suggestions, keyboard and the toolbar row */
 #dock{flex:none;border-top:1px solid var(--line);background:var(--bg);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
@@ -175,6 +175,33 @@ a.bt{color:inherit;text-decoration:none}
 .ch .x{position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:12px;background:var(--fg);color:var(--bg);font-size:13px;line-height:24px}
 .nt{color:var(--mut);font-size:13.5px;margin:8px 0}
 li{margin:5px 0}
+/* report dialog */
+#rep{border:0;padding:0;border-radius:20px;background:var(--bg);color:var(--fg);width:min(480px,calc(100% - 24px));max-height:calc(100dvh - 24px);box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:auto}
+#rep::backdrop{background:rgba(0,0,0,.55)}
+.rh{display:flex;align-items:center;padding:14px 8px 0 18px}.rh h2{flex:1;margin:0;font-size:19px}
+.rn{margin:6px 18px 12px;color:var(--mut);font-size:13.5px}
+.rn a{color:var(--ac)}
+.rl{display:grid;gap:8px;padding:0 14px 6px}
+.rl button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:11px 14px;display:grid;gap:2px}
+.rl button:hover,.rl button:focus-visible{border-color:var(--ac)}
+.rl b{font-size:15px}.rl span{color:var(--mut);font-size:13px}
+#rep2{padding:8px 18px 4px}
+#rep2 .rn{margin-left:0;margin-right:0}
+#rep2 h3{margin:10px 0 6px;font-size:17px}
+.rfl{display:grid;gap:4px;margin:0 0 10px;font-size:13.5px;font-weight:600}
+.rfl small{font-weight:400;color:var(--mut)}
+.rfl input,.rfl textarea{font:15px/1.4 system-ui,sans-serif;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--fg);width:100%;resize:vertical;font-weight:400}
+.rfl input:focus,.rfl textarea:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-soft)}
+.rfl .d,.rfl input.d,.rfl textarea.d{font-family:"Noto Sans Devanagari","Nirmala UI","Mangal",sans-serif}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.ra{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 4px}
+#rep3{padding:6px 18px 18px}
+#rep3 .rn{margin-left:0;margin-right:0}
+.rok{margin:10px 0 0;font-size:17px;font-weight:650}
+.rerr{margin:0 0 8px;color:var(--ac);font-size:13.5px;min-height:0}
+.rerr:empty{display:none}
+.sg.r{border-style:dashed;background:none}
+.sg.r .d{font:600 14px system-ui,sans-serif;color:var(--mut);padding-top:4px}
 /* welcome dialog */
 #intro{border:0;padding:0;border-radius:20px;background:var(--bg);color:var(--fg);width:min(760px,calc(100% - 24px));max-height:calc(100dvh - 24px);box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:auto}
 #intro[open]{display:flex;flex-direction:column}
@@ -195,6 +222,7 @@ li{margin:5px 0}
 <header>
  <div class="brand"><div class="logo d" aria-hidden="true">क</div><div><h1>Nepali Type</h1><small>Unicode + Devanagari font, offline</small></div></div>
  <button class="pill" id="inst" hidden>Install</button>
+ <button class="ib" id="report" aria-label="Report a problem, a missing word or an idea" title="Report a problem or idea"><svg viewBox="0 0 24 24"><path d="M4 22V4M4 4h13l-2 4 2 4H4"/></svg></button>
  <a class="ib" href={REPO} target="_blank" rel="noopener" aria-label="Source code on GitHub" title="Source code on GitHub"><Fragment set:html={GITHUB_ICON}/></a>
  <button class="ib" id="theme" aria-label="Toggle dark mode" title="Dark / light"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
  <button class="ib" id="hidehd" aria-label="Hide top bar" title="Hide top bar"><svg viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg></button>
@@ -217,8 +245,8 @@ li{margin:5px 0}
   <div id="rom"></div>
  </section>
  <section class="card">
-  <div class="lab"><span>Devanagari font</span><span>Preeti layout</span></div>
-  <button class="cc" data-copy="font" aria-label="Copy Devanagari font text" title="Copy Devanagari font text"><Fragment set:html={copy}/></button>
+  <div class="lab"><span>Preeti Keymap</span></div>
+  <button class="cc" data-copy="font" aria-label="Copy Preeti keymap text" title="Copy Preeti keymap text"><Fragment set:html={copy}/></button>
   <div id="pre"></div>
  </section>
 </main>
@@ -236,6 +264,34 @@ li{margin:5px 0}
 <div id="sh" role="dialog" aria-label="Chart"><div class="sh0"><b>Chart</b><a class="bt" href="/chart/">Full cheatsheet ↗</a><button class="bt p" id="x">Done</button></div>
 <div id="tabs"></div><div class="find"><input id="cq" type="search" placeholder="Find a letter: ka, ksh, S, क…" aria-label="Find a letter" autocomplete="off" autocapitalize="none" spellcheck="false"></div><div id="body"><div class="pn" id="p-q"></div></div></div>
 <div id="t" role="status"><span></span><button></button></div>
+<!-- report a problem: each choice opens a prefilled GitHub issue -->
+<dialog id="rep" aria-labelledby="repT">
+ <form method="dialog" class="rh"><h2 id="repT">Report a problem or idea</h2><button class="ib" aria-label="Close">×</button></form>
+ <!-- step 1: what kind -->
+ <div id="rep1">
+  <p class="rn">No account needed. Pick one, check the details, and send. It is posted publicly as an issue on GitHub.</p>
+  <div class="rl" id="rtypes"></div>
+  <p class="rn"><a href="/issues/">See open and solved reports</a></p>
+ </div>
+ <!-- step 2: the details -->
+ <form id="rep2" hidden novalidate>
+  <button type="button" class="bt" id="rback">← Back</button>
+  <h3 id="rep2t"></h3>
+  <div id="rf"></div>
+  <label class="rfl">Your name <small>(optional, shown with the report)</small><input name="name" id="rname" maxlength="40" placeholder="Leave empty to stay anonymous" autocomplete="name"></label>
+  <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <p class="rn">Sent without an account, as an issue by the project. Anyone can read it. Do not include private details.</p>
+  <p id="rerr" class="rerr" role="alert"></p>
+  <div class="ra"><button type="submit" class="bt p" id="rsend">Send report</button><button type="button" class="bt" id="rgh">Open on GitHub instead</button></div>
+  <p class="rn">“Open on GitHub” uses your own GitHub account, so the issue is under your name.</p>
+ </form>
+ <!-- step 3: sent -->
+ <div id="rep3" hidden>
+  <p class="rok">Thank you! Your report was sent.</p>
+  <p class="rn" id="rdone"></p>
+  <div class="ra"><a class="bt p" id="rlink" href="/issues/">See all reports</a><button type="button" class="bt" id="rclose">Close</button></div>
+ </div>
+</dialog>
 <!-- shown once on the first visit; reopened from Help → Watch the demo -->
 <dialog id="intro" aria-labelledby="introT">
  <video src="/demo.mp4" poster="/demo.webp" muted loop playsinline controls preload="none" width="720" height="1280" aria-label="Nepali Type demo video"></video>

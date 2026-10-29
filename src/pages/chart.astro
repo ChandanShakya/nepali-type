@@ -36,6 +36,8 @@ const features: [string, string][] = [
   ["More room", "Hide the top bar with <b>⌃</b>. Card titles disappear and buttons become icons. Bring it back with <b>⌄</b> in the bottom row."],
   ["Dark mode", "Follows your system until you pick one with the moon button."],
   ["Install and offline", "Install it from the browser (Chrome, Edge, Android: Install button; iPhone: Share → Add to Home Screen). After the first visit it works with no internet."],
+  ["Report a problem or idea", "The ⚑ button in the top bar (and in Chart → Help) reports a missing word, a wrong conversion, a misspelled suggestion, a bug or an idea. <b>No account needed</b>: check the details, add your name if you like, and press Send. Prefer your own GitHub account? Use “Open on GitHub instead”. After you finish typing a word the dictionary does not know, a ⚑ Report chip appears in the suggestion bar."],
+  ["Open and solved reports", "<a href=\"/issues/\">The reports page</a> lists what is still open and what has been solved, so you can see when a missing word you reported is fixed."],
   ["Private", "Everything runs in your browser. Text, saved words and settings never leave your device. No account, no tracking."],
 ];
 ---
@@ -177,7 +179,7 @@ footer a{color:var(--ac)}
   <li><kbd>0f</kbd>, <kbd>if</kbd> and <kbd>If</kbd> are single letters: ण, ष, क्ष.</li>
   <li>Press <b>★ Save</b> in the app to keep a word. Saved words appear in the suggestion bar.</li>
  </ul>
- <footer>Nepali Type is free, open source, works offline and keeps everything on your device. <a href="/">Start typing →</a> · <a href={REPO} target="_blank" rel="noopener">Source on GitHub</a></footer>
+ <footer>Nepali Type is free, open source, works offline and keeps everything on your device. <a href="/">Start typing →</a> · <a href={REPO} target="_blank" rel="noopener">Source on GitHub</a> · <a href="/?report=1">Report a problem or idea</a> · <a href="/issues/">Open &amp; solved reports</a></footer>
 </main>
 <script>
 if(import.meta.env.PROD&&"serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});

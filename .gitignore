@@ -25,3 +25,5 @@ Thumbs.db
 
 # /brag launch video renders
 brag-output*/
+.dev.vars
+.wrangler/

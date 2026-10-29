@@ -1,4 +1,6 @@
 import {R,SH,SH2,KEYS,P,conv,clean,toPreeti,toRoman,roman,ROMAN,makeDict} from "./nepali.js";
+import {REPO} from "../data/site.js";
+import {REPORTS} from "../data/reports.js";
 import {VOWELS,CONSONANT_ROWS,CONSONANTS,MATRAS,CONJUNCTS,PUNCT,SPECIALS,entry,findEntries} from "./charts.js";
 
 // the dictionary is its own file, fetched and built once the page is idle: it never slows the first paint.
@@ -129,6 +131,10 @@ function drawRoman(){
  if(!last){
   firstWord=null;
   info.innerHTML="";
+  // a word was just finished and the dictionary has nothing like it: offer to report it
+  const pw=v.slice(0,rin.selectionEnd??v.length).trimEnd().split(/\s+/).pop();
+  if(pw&&pw.length>=3&&D.size&&!D.roman(pw,1).length&&/[\u0915-\u0939]/.test(roman(pw).u)&&!reported().includes(pw))
+   sg.appendChild(chip("r","⚑ Report","<kbd>"+esc(pw)+"</kbd> is not in the dictionary",()=>reportForm("missing-word",pw)));
   favChips();["namaste","nepaal","dhanyawaad","maayaa"].forEach(w=>sg.appendChild(chip("",roman(w).u,"<kbd>"+w+"</kbd>",()=>insert(w+" "))));return}
  const wu=roman(word).u,lu=roman(last[0]).u;
  info.innerHTML="<kbd>"+esc(last[0])+"</kbd> → <b class=d>"+(last[1]==="v"?lu+" / ◌"+(ROMAN.V[last[0]][1]||"(a)"):sign(lu))+"</b> &nbsp;word <b class=d>"+dsp(wu)+"</b>";
@@ -250,6 +256,70 @@ function tapOffset(el,e){
 out.addEventListener("click",e=>{if(mode!=="preeti"||!buf)return;const o=tapOffset(out,e);if(o!=null)moveTo(caretFrom(conv(buf),o))});
 $("#pre").addEventListener("click",e=>{if(mode!=="preeti"||!buf)return;const o=tapOffset($("#pre"),e);if(o!=null)moveTo(o)});
 
+// ---------- report a problem ----------
+// Default: sent without an account to /api/report, which creates the GitHub issue as the project owner.
+// Alternative: open a prefilled GitHub issue under the person's own account. Nothing is posted until a button is pressed.
+const clip=(x,n=300)=>{x=String(x??"").trim();return x.length>n?x.slice(0,n)+"…":x};
+const reported=()=>{try{return JSON.parse(store.get("nw-rep"))||[]}catch(e){return[]}};
+const markReported=w=>w&&store.set("nw-rep",JSON.stringify([...reported(),w].slice(-200)));
+// the word the person was working on: Romanized mode reads the box, font keys mode reads the cursor word
+const workWord=()=>mode==="roman"?rin.value.slice(0,rin.selectionEnd??rin.value.length).trim().split(/\s+/).pop()||"":before().trim().split(/\s+/).pop()||"";
+// what each report starts with, filled in from what is on screen
+function reportDefaults(kind,word){
+ const w=word??workWord(),roman_=mode==="roman",shown=roman_?roman(w).u:clean(conv(w));
+ return{
+  "missing-word":{typed:w,shown},
+  "wrong-conversion":{mode:roman_?"Romanized":"Preeti keymap (font keys)",input:roman_?rin.value:buf,unicode:uni(),fontkeys:preeti()},
+  "wrong-suggestion":{typed:w},
+  "bug":{environment:[navigator.userAgent,innerWidth+"×"+innerHeight,"mode: "+(roman_?"Romanized":"font keys"),"theme: "+(isDark()?"dark":"light"),matchMedia("(display-mode: standalone)").matches?"installed app":"browser tab","dictionary words loaded: "+D.size].join("\n")},
+  "idea":{}}[kind]}
+const rep=$("#rep"),repForm=$("#rep2");
+let rkind="",rword="";
+const repStep=n=>{["rep1","rep2","rep3"].forEach((id,i)=>$("#"+id).hidden=i+1!==n);$("#repT").textContent=n===3?"Report sent":"Report a problem or idea"};
+// step 1 buttons come from the same definitions as the forms
+$("#rtypes").innerHTML=Object.entries(REPORTS).map(([k,R])=>"<button type=button data-r="+k+"><b>"+esc(R.label)+"</b><span>"+esc(R.hint)+"</span></button>").join("");
+$("#rtypes").onclick=e=>{const b=e.target.closest("[data-r]");if(b)reportForm(b.dataset.r)};
+function reportForm(kind,word){
+ rkind=kind;rword=word??"";const R=REPORTS[kind],def=reportDefaults(kind,word);
+ $("#rep2t").textContent=R.label;$("#rerr").textContent="";
+ $("#rf").innerHTML=R.fields.map(f=>"<label class=rfl>"+esc(f.label)+(f.required?" *":"")+(f.long?"<textarea name="+f.id+" rows=3 maxlength=600></textarea>":"<input name="+f.id+" maxlength=300>")+"</label>").join("");
+ for(const f of R.fields){const el=repForm.elements[f.id];el.value=clip(def[f.id],f.id==="environment"?500:300);if(/[\u0900-\u097f]/.test(el.value))el.classList.add("d")}
+ repForm.elements.name.value=store.get("nw-name")||"";
+ repStep(2);if(!rep.open)rep.showModal();
+ const first=R.fields.find(f=>f.required&&!repForm.elements[f.id].value);if(first)repForm.elements[first.id].focus()}
+const reportValues=()=>Object.fromEntries(REPORTS[rkind].fields.map(f=>[f.id,repForm.elements[f.id].value.trim()]));
+const missingField=()=>REPORTS[rkind].fields.find(f=>f.required&&!repForm.elements[f.id].value.trim());
+repForm.addEventListener("submit",async e=>{
+ e.preventDefault();
+ const bad=missingField();if(bad){$("#rerr").textContent="Please fill in “"+bad.label+"”.";repForm.elements[bad.id].focus();return}
+ const btn=$("#rsend");btn.disabled=true;btn.textContent="Sending…";$("#rerr").textContent="";
+ const name=repForm.elements.name.value.trim();store.set("nw-name",name);
+ try{
+  const r=await fetch("/api/report",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({type:rkind,fields:reportValues(),name,website:repForm.elements.website.value})});
+  const j=await r.json().catch(()=>({}));
+  if(r.ok&&j.ok){markReported(rword);reportSent(j)}
+  else $("#rerr").textContent=j.error||"The report could not be sent. Please try again, or use “Open on GitHub instead”.";
+ }catch(err){$("#rerr").textContent="Could not reach the server. Are you offline? You can try again later, or use “Open on GitHub instead”."}
+ btn.disabled=false;btn.textContent="Send report"});
+function reportSent(j){
+ $("#rdone").innerHTML=j.number?"It is issue <b>#"+j.number+"</b> on GitHub. Open reports are listed on the reports page, and it moves to “Solved” when it is fixed."+(j.url?" <a href=\""+esc(j.url)+"\" target=_blank rel=noopener>View it on GitHub</a>.":""):"Thanks. It will be looked at soon.";
+ repStep(3)}
+// the same report under the person's own GitHub account
+$("#rgh").onclick=()=>{
+ if(missingField()){$("#rerr").textContent="Please fill in “"+missingField().label+"”.";return}
+ const R=REPORTS[rkind],v=reportValues(),u=new URL(REPO+"/issues/new");
+ u.searchParams.set("template",rkind+".yml");u.searchParams.set("title",R.titlePrefix+clip(v[R.titleField],60));
+ for(const[id,val] of Object.entries(v))if(val)u.searchParams.set(id,val);
+ window.open(u.href,"_blank","noopener");markReported(rword)};
+$("#rback").onclick=()=>repStep(1);
+$("#rclose").onclick=()=>rep.close();
+rep.addEventListener("close",()=>{repStep(1);if(mode==="roman")draw()});
+const openReport=()=>{repStep(1);rep.showModal()};
+$("#report").onclick=()=>{buzz();openReport()};
+// a tap outside the card closes it
+rep.addEventListener("click",e=>{if(e.target===rep)rep.close()});
+if(new URLSearchParams(location.search).has("report"))openReport();
+
 // welcome video: once on the first visit, then from Help
 const intro=$("#intro"),iv=intro.querySelector("video");
 // marked as seen when shown, so it never comes back on its own even if the tab is closed with it open
@@ -315,8 +385,9 @@ note("s","Punctuation and digits.");cells("s",PUNCT);
 note("x","Extra font glyphs. In Windows apps they need the Alt code shown; here you just tap them. ॐ and ऽ are Unicode-only.");
 grid("x",SPECIALS.map(e=>[cellHTML(e,e.u.startsWith("्")?"◌"+e.u:dsp(e.u)),()=>typeEntry(e)]));
 note("s","Signs: <kbd class=kr>M</kbd> <kbd>+</kbd> ं &nbsp;<kbd class=kr>~</kbd> <kbd>F</kbd> ँ &nbsp;<kbd class=kr>H</kbd> <kbd>M</kbd> ः &nbsp;<kbd class=kr>\\</kbd> <kbd>\\</kbd> halant ्. Romanized <kbd class=kr>'</kbd> keeps letters apart (<kbd class=kr>ra'aa</kbd> रआ). Font keys: <kbd>m</kbd> is a hook (<kbd>km</kbd> फ, <kbd>em</kbd> झ, <kbd>pm</kbd> ऊ).");
-$("#p-i").innerHTML="<p class=nt><button class='bt p' id=watch>▶ Watch the demo</button> <a class=bt href=/chart/>Full cheatsheet</a> <a class=bt href='"+$(".ib[href*=github]").href+"' target=_blank rel=noopener>GitHub</a></p><ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li>Switch modes with the <b>ABC / ⌨</b> key at the bottom left. <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Font keys</b> works like typing with a Devanagari font in Word or LibreOffice: each key is one glyph. It uses the <b>Preeti</b> layout, the most widely used one, so the copied font text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> by tapping the text, dragging the space bar, or with the arrow keys. Typing and ⌫ work at the cursor.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li>Every chart cell shows the letter, its <b class=kr>Romanized spelling</b> (blue) and its <b>font keys</b> (grey). Tap it to type it in the current mode. The <a href=/chart/>cheatsheet page</a> uses the same chart.</li><li><b>Blue keys</b> on the font keyboard are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>A <span class=sm>red</span> character in the Devanagari font box has no key in the Preeti font, for example ! - : ; and letters like ऑ ॉ. It is kept as it is, but it will not show correctly in a Preeti document.</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline.</li></ul>";
+$("#p-i").innerHTML="<p class=nt><button class='bt p' id=watch>▶ Watch the demo</button> <a class=bt href=/chart/>Full cheatsheet</a> <button class=bt id=helprep>⚑ Report a problem or idea</button> <a class=bt href=/issues/>Open &amp; solved reports</a> <a class=bt href='"+$(".ib[href*=github]").href+"' target=_blank rel=noopener>GitHub</a></p><ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li>Switch modes with the <b>ABC / ⌨</b> key at the bottom left. <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Font keys</b> works like typing with a Devanagari font in Word or LibreOffice: each key is one glyph. It uses the <b>Preeti</b> layout, the most widely used one, so the copied font text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> by tapping the text, dragging the space bar, or with the arrow keys. Typing and ⌫ work at the cursor.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li>Every chart cell shows the letter, its <b class=kr>Romanized spelling</b> (blue) and its <b>font keys</b> (grey). Tap it to type it in the current mode. The <a href=/chart/>cheatsheet page</a> uses the same chart.</li><li><b>Blue keys</b> on the font keyboard are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>A <span class=sm>red</span> character in the Devanagari font box has no key in the Preeti font, for example ! - : ; and letters like ऑ ॉ. It is kept as it is, but it will not show correctly in a Preeti document.</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline.</li></ul>";
 $("#watch").onclick=()=>{document.body.classList.remove("open");openIntro()};
+$("#helprep").onclick=()=>{document.body.classList.remove("open");openReport()};
 }
 // Find: shows every chart entry matching the query; empty query goes back to the open tab
 let lastTab="c";

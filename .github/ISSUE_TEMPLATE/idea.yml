@@ -1,0 +1,16 @@
+name: Idea or request
+description: A feature, a setting, or anything that would make typing easier
+title: "Idea: "
+labels: ["idea"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it would help
+      description: What are you trying to do?

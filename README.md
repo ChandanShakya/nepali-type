@@ -26,6 +26,8 @@ Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali 
 | **Welcome video** | Plays once on your first visit. Watch it again from Chart → Help → ▶ Watch the demo. |
 | **Dark mode** | Follows your system until you choose with the moon button. |
 | **Install and offline** | Install button in Chrome, Edge and Android; on iPhone use Share → Add to Home Screen. After the first visit it works with no internet (the demo video needs a connection). |
+| **Report a problem or idea** | The **⚑** button in the top bar (also in Chart → Help) reports a missing word, a wrong conversion, a misspelled suggestion, a bug or an idea. **No account needed**: it is sent as an issue by the project, with an optional name. Prefer your own GitHub account? "Open on GitHub instead" opens the same report prefilled. After a word the dictionary does not know, a **⚑ Report** chip appears in the suggestion bar. |
+| **Open and solved reports** | [`/issues/`](https://nepali-type.chandanshakya.com.np/issues/) lists reports that are still open and the ones already solved. |
 | **Private** | Everything runs in your browser. Text, saved words and settings stay on your device. No account, no tracking. |
 
 ## Romanized cheat sheet
@@ -66,6 +68,10 @@ npm run preview   # serve dist/ locally
 src/
   pages/index.astro     the typing app, welcome popup, SEO metadata
   data/site.js          GitHub repo link and icon, shared by both pages
+  data/reports.js       report types and fields: the app form, the server and the GitHub forms all use it
+  server/reports.js     report and issue-list logic (no secrets), used by the functions and the tests
+  pages/issues.astro    open and solved reports page
+  ../.github/ISSUE_TEMPLATE/  issue forms for the report types
   pages/chart.astro     printable cheatsheet, rendered at build time
   styles/base.css       theme tokens shared by both pages
   scripts/nepali.js     conversion logic (Preeti ⇄ Unicode, Romanized → Unicode), no DOM
@@ -73,6 +79,7 @@ src/
   scripts/charts.js     the alphabet shown by the in-app chart and the cheatsheet
   components/Cell.astro one cheatsheet cell
   data/words.txt        dictionary: one word per line, optional extra spellings after it
+functions/api/          Cloudflare Pages Functions: report.js (POST) and issues.js (GET)
 public/
   sw.js                 service worker; the build fills in the file list and version
   manifest.webmanifest  PWA manifest
@@ -89,6 +96,7 @@ test.mjs                assertions for the converters
 
 - Build command: `npm run build`
 - Output directory: `dist`
+- The `functions/` folder is deployed automatically by Cloudflare Pages (no extra setting). Anonymous reports need the `GITHUB_TOKEN` secret: see "Reports, anonymous or with GitHub".
 - Serve it over HTTPS. Service workers and the Install button need it.
 - The site runs on Cloudflare Pages at `nepali-type.pages.dev`, with `nepali-type.chandanshakya.com.np` as its custom domain. Canonical and Open Graph URLs come from `site` in `astro.config.mjs`, so search engines treat the custom domain as the main address. If you move domains, change `site`.
 - Don't let a CDN cache `sw.js` for long. Browsers check it for updates. `public/_headers` sets this (and long caching for hashed assets) on Cloudflare Pages and Netlify.
@@ -97,9 +105,28 @@ test.mjs                assertions for the converters
 
 Add a line to `src/data/words.txt`. Put more common words higher, because order is the ranking. The dictionary is a separate file that loads in the background after the page is ready, so a bigger list does not slow the first load. For names and English loanwords, add extra spellings after the word: `काठमाडौं kathmandu ktm`. Then run `npm test`. It lists any word that can't be typed back in Romanized mode.
 
+## Reports, anonymous or with GitHub
+
+Anyone can report a missing word, a wrong conversion, a bug or an idea from the **⚑** button, without an account. The app sends it to `/api/report`, a Cloudflare Pages Function (`functions/api/report.js`, logic in `src/server/reports.js`) that creates a GitHub issue **as the project owner** using a token that only exists in Cloudflare. If the person typed a name it is shown in the issue and on the reports page; otherwise the issue says it was reported anonymously. "Open on GitHub instead" opens the same report as a prefilled issue under the person's own account (the forms in `.github/ISSUE_TEMPLATE/`).
+
+`/issues/` lists open and solved reports through `/api/issues`, which reads the repo's issues (cached for 5 minutes) and leaves out pull requests and anything labelled `spam` or `invalid`.
+
+**One-time setup** (the site works without it, but anonymous sending then says it is not set up and points people to "Open on GitHub instead"):
+
+1. On GitHub: Settings → Developer settings → Fine-grained personal access tokens → Generate new token. Resource owner: you. Repository access: **Only select repositories** → this repo. Permissions: **Issues: Read and write** (nothing else). Pick an expiry and note the date.
+2. In Cloudflare: Workers & Pages → this project → Settings → Variables and Secrets → add a **secret** named `GITHUB_TOKEN` with that token, for Production (and Preview if you use it). Optional variable `GITHUB_REPO` (`owner/name`) if the repo is not `ChandanShakya/nepali-type`. Redeploy once.
+3. Create the labels the reports use, so they are applied: `missing word`, `conversion`, `dictionary`, `idea` (`bug` exists by default).
+4. Recommended: Cloudflare → Security → WAF → Rate limiting rules: for requests to `/api/report`, limit to about 5 per 10 minutes per IP. The function also limits to 5 reports an hour per network address, but that check is per data centre and best effort.
+
+**Protection built in:** a report is only accepted from the site's own pages, is limited in size, has `@mentions` and `#123` links broken so it cannot notify or link anyone, has a hidden field that bots fill in, and is rate limited. Stranger-written text is public: close or delete spam on GitHub, or add the `spam` label to hide an issue from the reports page.
+
+**Run it locally:** `npm run build`, then `npx wrangler pages dev dist --binding GITHUB_TOKEN=... --binding GITHUB_REPO=owner/name`. For a pretend GitHub, add `--binding GITHUB_API=http://127.0.0.1:PORT`. Never put the token in the repo; for local use put it in `.dev.vars` (ignored by git).
+
+`npm test` checks the report forms, the field names the app fills in, the spam checks, the rate limit and the issue list against a pretend GitHub.
+
 ## Privacy
 
-Everything runs in your browser. Text, saved words and settings are stored only in your browser's local storage. Nothing is sent anywhere.
+Everything runs in your browser. Text, saved words and settings are stored only in your browser's local storage. The only thing that ever leaves the page is a report, and only when the person presses **Send report** (or opens it on GitHub): then the fields shown in the form, plus the optional name, are posted publicly as a GitHub issue. There is no tracking and no account.
 
 ## License
 

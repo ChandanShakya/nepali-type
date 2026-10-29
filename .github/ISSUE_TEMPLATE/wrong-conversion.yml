@@ -1,0 +1,35 @@
+name: Wrong conversion
+description: Romanized, Unicode or font keys came out wrong
+title: "Wrong conversion: "
+labels: ["conversion"]
+body:
+  - type: input
+    id: mode
+    attributes:
+      label: Mode
+      description: Romanized or font keys.
+  - type: textarea
+    id: input
+    attributes:
+      label: What you typed
+    validations:
+      required: true
+  - type: textarea
+    id: unicode
+    attributes:
+      label: Unicode the app showed
+  - type: textarea
+    id: fontkeys
+    attributes:
+      label: Font keys the app showed
+  - type: textarea
+    id: expected
+    attributes:
+      label: What it should be
+      description: The correct Unicode text, or the keys you press in the Preeti font.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (optional)

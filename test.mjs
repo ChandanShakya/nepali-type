@@ -66,3 +66,73 @@ console.log("reph/ि/conjunct combos round-trip");
 // र in the middle of a conjunct chain is not a reph (ट्र्ब); one that starts a syllable is
 for(const w of ["ट्र्ब","क्र्य","अर्थ","उर्दू","अन्तर्राष्ट्रिय"])assert.equal(clean(conv(toPreeti(w))),w,w);
 console.log("reph vs conjunct chain ok");
+
+// ---------- reports: forms, server checks, issue list ----------
+import {REPORTS} from "./src/data/reports.js";
+import {buildIssue,parseReporter,handleReport,handleIssues,LIMITS} from "./src/server/reports.js";
+import {readdirSync} from "node:fs";
+// the app's fields and the GitHub issue forms use the same ids, in both directions, so nothing opens blank or goes missing
+const tplDir=".github/ISSUE_TEMPLATE/";
+for(const[tpl,R] of Object.entries(REPORTS)){
+ const yml=readFileSync(tplDir+tpl+".yml","utf8"),ids=[...yml.matchAll(/^\s+id: (\S+)$/gm)].map(m=>m[1]);
+ assert.deepEqual([...ids].sort(),R.fields.map(f=>f.id).sort(),tpl+": issue form and app fields differ");
+ for(const l of R.labels)assert.ok(yml.includes(l),tpl+" form lacks label "+l)}
+assert.deepEqual(readdirSync(tplDir).filter(f=>f.endsWith(".yml")&&f!=="config.yml").map(f=>f.slice(0,-4)).sort(),Object.keys(REPORTS).sort(),"every report type has a form");
+console.log("report forms match the app fields");
+
+// building an issue: validation, sanitising, anonymous or named
+{const ok=buildIssue({type:"missing-word",fields:{typed:"kunai",expected:"कुनै"}});
+ assert.equal(ok.title,"Missing word: kunai");assert.deepEqual(ok.labels,["missing word"]);
+ assert.ok(ok.body.includes("### What you typed\n\nkunai")&&ok.body.endsWith("Reported anonymously from the website."));
+ assert.equal(parseReporter(ok.body),"");
+ const named=buildIssue({type:"idea",name:"  Sita *[x](y) @bob ",fields:{idea:"dark mode @alice #12"}});
+ assert.ok(!/@[a-z]|#\d/.test(named.body.replace(/@\u200b|#\u200b/g,"")),"mentions and issue links are broken");
+ assert.equal(parseReporter(named.body),"Sita xy bob");
+ assert.equal(buildIssue({type:"missing-word",fields:{typed:"x"}}).error?.includes("expected"),true,"required field");
+ assert.ok(buildIssue({type:"nope",fields:{}}).error);
+ assert.ok(buildIssue({type:"idea",fields:{idea:"x".repeat(5000)}}).body.length<LIMITS.field+200,"long text is cut")}
+
+// the report endpoint, with a pretend GitHub and a pretend cache
+{const calls=[],real=globalThis.fetch;
+ globalThis.fetch=async(url,init)=>{calls.push({url,init});return new Response(JSON.stringify({number:42,html_url:"https://github.com/o/r/issues/42"}),{status:201})};
+ const store=new Map(),cache={match:async k=>store.get(k.url)?.clone(),put:async(k,v)=>void store.set(k.url,v)};
+ const env={GITHUB_TOKEN:"t0k3n",GITHUB_REPO:"o/r"};
+ const post=(body,h={})=>new Request("https://site.test/api/report",{method:"POST",headers:{origin:"https://site.test","content-type":"application/json","cf-connecting-ip":"1.2.3.4",...h},body:typeof body==="string"?body:JSON.stringify(body)});
+ const good={type:"missing-word",name:"Sita",fields:{typed:"kunai",expected:"कुनै"}};
+ let r=await handleReport(post(good),env,{cache});let j=await r.json();
+ assert.equal(r.status,200);assert.deepEqual([j.ok,j.number,j.url],[true,42,"https://github.com/o/r/issues/42"]);
+ assert.equal(calls[0].url,"https://api.github.com/repos/o/r/issues");
+ assert.equal(calls[0].init.headers.authorization,"Bearer t0k3n");
+ assert.equal(JSON.parse(calls[0].init.body).title,"Missing word: kunai");
+ assert.equal(calls.length,1);
+ for(const[name,req,status] of [
+  ["other website",post(good,{origin:"https://evil.test"}),403],["no origin",post(good,{origin:""}),403],
+  ["not json",post(good,{"content-type":"text/plain"}),415],["too big",post("x".repeat(LIMITS.body+1)),413],["bad json",post("{nope"),400],
+  ["unknown type",post({type:"x",fields:{}}),400],["missing field",post({type:"missing-word",fields:{typed:"a"}}),400]]){
+  const x=await handleReport(req,env,{cache:null});assert.equal(x.status,status,name)}
+ assert.equal(calls.length,1,"rejected requests never reach GitHub");
+ // hidden field: a pretend success, nothing created
+ r=await handleReport(post({...good,website:"http://spam"}),env,{cache:null});assert.equal((await r.json()).ok,true);assert.equal(calls.length,1);
+ // no token: a clear message, nothing created
+ r=await handleReport(post(good),{},{cache:null});assert.equal(r.status,503);
+ // rate limit: 5 an hour per address, then 429; another address is fine
+ const lim={match:async k=>store.get(k.url)?.clone(),put:async(k,v)=>void store.set(k.url,v)};store.clear();
+ for(let i=0;i<LIMITS.perHour;i++)assert.equal((await handleReport(post(good),env,{cache:lim})).status,200);
+ assert.equal((await handleReport(post(good),env,{cache:lim})).status,429);
+ assert.equal((await handleReport(post(good,{"cf-connecting-ip":"9.9.9.9"}),env,{cache:lim})).status,200);
+ // GitHub down or refusing
+ globalThis.fetch=async()=>new Response("{}",{status:500});assert.equal((await handleReport(post(good),env,{cache:null})).status,502);
+ globalThis.fetch=async()=>{throw new Error("offline")};assert.equal((await handleReport(post(good),env,{cache:null})).status,502);
+
+ // the issue list: pull requests and spam are left out, the reporter name is read, the answer is cached
+ const apiIssues=[{number:3,title:"Missing word: a",html_url:"u3",state:"open",labels:[{name:"missing word",color:"0e8a16"}],comments:2,created_at:"2026-01-01",body:"x\n\n---\nReported by **Sita** from the website."},
+  {number:4,title:"a pull request",pull_request:{},state:"open",labels:[]},{number:5,title:"buy pills",state:"open",labels:[{name:"spam"}]},
+  {number:6,title:"Bug: b",html_url:"u6",state:"closed",state_reason:"not_planned",labels:[],comments:0,created_at:"2026-01-02",closed_at:"2026-01-03",body:""}];
+ let n=0;globalThis.fetch=async u=>{n++;return new Response(JSON.stringify(apiIssues),{status:200})};store.clear();
+ const get=s=>new Request("https://site.test/api/issues"+s);
+ j=await (await handleIssues(get("?state=open"),env,{cache})).json();
+ assert.deepEqual(j.issues.map(i=>i.number),[3,6]);assert.equal(j.issues[0].by,"Sita");assert.equal(j.issues[0].solved,false);assert.equal(j.issues[1].solved,false,"closed as not planned is not solved");
+ await handleIssues(get("?state=open"),env,{cache});assert.equal(n,1,"second request comes from the cache");
+ assert.equal((await (await handleIssues(get("?state=bogus"),env,{cache})).json()).state,"open");
+ globalThis.fetch=real}
+console.log("report endpoint and issue list checked");

@@ -1,0 +1,33 @@
+name: Missing word
+description: A word the dictionary does not suggest
+title: "Missing word: "
+labels: ["missing word"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Words are added to the built-in dictionary, so everyone gets the suggestion. One word per issue is easiest.
+  - type: input
+    id: typed
+    attributes:
+      label: What you typed
+      description: The Romanized spelling, or the font keys.
+    validations:
+      required: true
+  - type: input
+    id: shown
+    attributes:
+      label: What the app showed
+      description: The Nepali text it produced.
+  - type: input
+    id: expected
+    attributes:
+      label: The word you expected
+      description: The correct Nepali spelling.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (optional)
+      description: An example sentence, or other spellings people use.

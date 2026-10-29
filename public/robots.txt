@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /issues/
 
 Sitemap: https://nepali-type.chandanshakya.com.np/sitemap.xml

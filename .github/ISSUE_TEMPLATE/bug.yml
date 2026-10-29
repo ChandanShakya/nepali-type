@@ -1,0 +1,22 @@
+name: Something is broken
+description: A bug or a layout problem
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you expect, and what did you see instead? A screenshot helps.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to repeat it
+      placeholder: "1. Open the app\n2. Tap …"
+  - type: textarea
+    id: environment
+    attributes:
+      label: Your device
+      description: Filled in by the app. Edit or remove anything you do not want to share.

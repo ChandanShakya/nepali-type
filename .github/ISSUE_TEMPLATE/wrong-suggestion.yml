@@ -1,0 +1,25 @@
+name: Wrong spelling in a suggestion
+description: A dictionary suggestion is misspelled or not a real word
+title: "Wrong suggestion: "
+labels: ["dictionary"]
+body:
+  - type: input
+    id: word
+    attributes:
+      label: The suggestion that is wrong
+    validations:
+      required: true
+  - type: input
+    id: typed
+    attributes:
+      label: What you typed to get it
+  - type: input
+    id: correct
+    attributes:
+      label: The correct spelling
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (optional)

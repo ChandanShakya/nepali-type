@@ -253,6 +253,8 @@ console.log("report endpoint and issue list checked");
 // the practice passages type back exactly from their Preeti keys
 {const {PASSAGES}=await import("./src/data/passages.js");
  for(const t of PASSAGES)assert.equal(clean(conv(toPreeti(t))),t,t);
+ // and every key they need is on the practice page's on-screen keyboard
+ {const {R}=await import("./src/scripts/nepali.js"),on=new Set(R.flatMap(([a,b])=>[...a,...b," "]));for(const t of PASSAGES)for(const k of toPreeti(t))assert.ok(on.has(k),t+" needs "+k)}
  console.log(PASSAGES.length,"practice passages round-trip")}
 
 // ---------- every dictionary word, both lists, types back exactly from its Preeti keys ----------

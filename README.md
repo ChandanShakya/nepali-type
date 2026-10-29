@@ -4,7 +4,7 @@ Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali 
 
 **Live:** https://nepali-type.chandanshakya.com.np (also at https://nepali-type.pages.dev) · **Guide and cheatsheet:** [/chart/](https://nepali-type.chandanshakya.com.np/chart/)
 
-[![Watch the 46-second demo](public/demo.jpg)](https://nepali-type.pages.dev/demo.mp4)
+[![Watch the 45-second demo](public/demo.jpg)](https://nepali-type.pages.dev/demo.mp4)
 
 *Tap the image to watch the demo video.*
 
@@ -24,7 +24,7 @@ Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali 
 | **Next words** | After a word and a space, the suggestion bar offers the words that usually come next; while you type, the words that fit the letters and usually follow the last word come first (`mero` then `na` puts नाम first). The pairs come from the Nepali Wikipedia plus a hand-written list of everyday ones, then the pairs you type on your device come before them. On held-out Wikipedia text the real next word was among the four suggestions 38% of the time and the first one 22% of the time, so it helps but is not magic. |
 | **Direct-mode keys** | While a word is pending: <kbd>Space</kbd> converts, <kbd>Tab</kbd> takes the first dictionary word, <kbd>↑</kbd> <kbd>↓</kbd> then <kbd>Space</kbd> pick a suggestion, <kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>5</kbd> take one, <kbd>Esc</kbd> keeps the word as English. The ↶ button (Direct mode) undoes the last step on a phone. |
 | **Convert a file** | [`/convert/`](https://nepali-type.chandanshakya.com.np/convert/): drop a Preeti Word (.docx) or text (.txt) file and download Unicode. Only text in a Preeti font is touched, joined across run edges so ि and reph land right, and set in Mangal; everything else in the file is copied as it is. Runs in the browser, nothing is uploaded. |
-| **Typing practice** | [`/practice/`](https://nepali-type.chandanshakya.com.np/practice/): a short passage, the next Preeti key underlined, WPM and accuracy, best score kept on the device. |
+| **Typing practice** | [`/practice/`](https://nepali-type.chandanshakya.com.np/practice/): learn the Preeti keys on an on-screen keyboard that lights the next key (and works by touch). **Keys** drills a row at a time (home, top, bottom, numbers, shift) or your weakest keys, **Words** drills common words, **Sentences** drills whole lines. A wrong key does not move you on; live speed (WPM), accuracy and a progress bar; your best score and your slow or missed keys stay on the device. |
 | **Share to Nepali Type** | Installed on Android, the app appears in the share sheet; shared text lands in the Direct box. |
 | **Paste hints** | Preeti keys pasted into Romanized mode (or Romanized words into Preeti mode) show a one-tap switch that moves the text to the right mode. In Direct mode, pasted Preeti keys or Latin words show a one-tap convert in place. |
 | **Three outputs** | Unicode (for the web and modern apps), Romanized spelling (to learn a word or type it again) and Devanagari font keystrokes (to paste into Preeti documents). |

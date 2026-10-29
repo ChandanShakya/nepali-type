@@ -1,4 +1,4 @@
-// Short passages for /practice/ (written for this app). Each must survive Unicode -> Preeti keys -> Unicode: test.mjs checks it.
+// Short passages for /practice/ (written for this app). Each must survive Unicode -> Preeti keys -> Unicode, and use only keys that are on the on-screen keyboard (no Alt-code glyphs): test.mjs checks both.
 export const PASSAGES=[
 "मेरो नाम राम हो।",
 "म काठमाडौंमा बस्छु।",
@@ -8,18 +8,18 @@ export const PASSAGES=[
 "तपाईंलाई कस्तो छ?",
 "मलाई चिया मन पर्छ।",
 "सगरमाथा संसारको सबैभन्दा अग्लो हिमाल हो।",
-"दशैं नेपालीहरूको ठूलो चाड हो।",
+"दशैं नेपालको ठूलो चाड हो।",
 "उनी हरेक बिहान किताब पढ्छिन्।",
 "बजारमा तरकारी सस्तो भयो।",
 "हाम्रो घर पोखरामा छ।",
 "धन्यवाद, फेरि भेटौंला।",
 "नदीमा पानी धेरै छ।",
-"बच्चाहरू बगैँचामा खेल्दै छन्।",
+"बच्चा बगैँचामा खेल्दै छ।",
 "शिक्षा सबैको अधिकार हो।",
 "मेरो साथी इन्जिनियर हो।",
 "हिजो हामीले मन्दिर घुम्यौं।",
 "कृपया ढोका बन्द गर्नुहोस्।",
-"विद्यार्थीहरू कक्षामा पढ्दै छन्।",
+"विद्यार्थी कक्षामा पढ्दै छ।",
 "आमाले मलाई खाना पकाइदिनुभयो।",
 "यो सडक पोखराबाट काठमाडौं जान्छ।",
 "पुस्तकालयमा धेरै पुस्तक छन्।",

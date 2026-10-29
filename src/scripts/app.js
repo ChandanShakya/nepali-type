@@ -5,7 +5,7 @@ import {VOWELS,CONSONANT_ROWS,CONSONANTS,MATRAS,CONJUNCTS,PUNCT,SPECIALS,entry,f
 
 // the dictionary is its own file, fetched and built once the page is idle: it never slows the first paint.
 // Until it arrives (or if it cannot load) there are simply no word suggestions.
-let D={roman:()=>[],prefix:()=>[],size:0};
+let D={roman:()=>[],prefix:()=>[],known:()=>true,has:()=>false,size:0};
 const dict=()=>D;
 (window.requestIdleCallback||setTimeout)(()=>import("../data/words.txt?raw").then(m=>{D=makeDict(m.default);draw()}).catch(()=>{}));
 
@@ -133,7 +133,7 @@ function drawRoman(){
   info.innerHTML="";
   // a word was just finished and the dictionary has nothing like it: offer to report it
   const pw=v.slice(0,rin.selectionEnd??v.length).trimEnd().split(/\s+/).pop();
-  if(pw&&pw.length>=3&&D.size&&!D.roman(pw,1).length&&/[\u0915-\u0939]/.test(roman(pw).u)&&!reported().includes(pw))
+  if(pw&&pw.length>=3&&D.size&&!D.known(pw)&&/[\u0915-\u0939]/.test(roman(pw).u)&&!reported().includes(pw))
    sg.appendChild(chip("r","⚑ Report","<kbd>"+esc(pw)+"</kbd> is not in the dictionary",()=>reportForm("missing-word",pw)));
   favChips();["namaste","nepaal","dhanyawaad","maayaa"].forEach(w=>sg.appendChild(chip("",roman(w).u,"<kbd>"+w+"</kbd>",()=>insert(w+" "))));return}
  const wu=roman(word).u,lu=roman(last[0]).u;

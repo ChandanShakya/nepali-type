@@ -136,3 +136,21 @@ console.log("report forms match the app fields");
  assert.equal((await (await handleIssues(get("?state=bogus"),env,{cache})).json()).state,"open");
  globalThis.fetch=real}
 console.log("report endpoint and issue list checked");
+
+// ---------- a word is always found by its own spelling, and a Romanized spelling is only Roman letters ----------
+{const text=readFileSync("src/data/words.txt","utf8"),D=makeDict(text),dev=/[ऀ-ॿ]/;
+ const words=text.split("\n").filter(l=>l&&l[0]!=="#").map(l=>l.split(/\s+/)[0]);
+ // every dictionary word: it has a Romanized spelling made of Roman letters only, and that spelling finds it again
+ const bad=words.filter(w=>{const r=toRoman(w);return !r||dev.test(r)||!D.has(w)||!D.roman(r,300).some(x=>x.u===w)||!D.known(r)});
+ assert.deepEqual(bad.slice(0,20),[],"dictionary words not found by their own Romanized spelling ("+bad.length+")");
+ // क्ष and ज्ञ with every vowel sign, with a halant, and inside longer words
+ const letters=["क्ष","ज्ञ","त्र","श्र","क्त"],extra=["","्न","्य","्म","्र"],out=[];
+ for(const c of letters)for(const m of MATRAS)for(const e of extra)for(const pre of ["","श","दि"]){const w=pre+c+e+m;const r=toRoman(w);if(r&&dev.test(r))out.push(w+"→"+r)}
+ assert.deepEqual(out.slice(0,10),[],"Romanized spellings that still contain Devanagari ("+out.length+")");
+ for(const[w,r] of [["शैक्षिक","shaikshik"],["शिक्षिका","shikshikaa"],["दक्षिण","dakshiN"],["ज्ञानी","gyaanii"]])assert.equal(toRoman(w),r,w);
+ // what the report chip decides: a word picked from the suggestions is known; gibberish is not
+ assert.equal(D.known("kaaThamaaDauM"),true,"canonical spelling of काठमाडौं");
+ assert.equal(D.known("kathmandu"),true);assert.equal(D.known("tapaaiiM"),true);assert.equal(D.known("saMsaar"),true);
+ assert.equal(D.known("kunaibhaakhatrenaam"),false);
+ assert.equal(D.roman("Hari",1).length>0,true,"a capitalised name still finds the word");
+ console.log("dictionary words are found by their own spelling:",words.length)}

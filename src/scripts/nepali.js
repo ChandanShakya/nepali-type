@@ -110,10 +110,12 @@ export function toRoman(u,sep=""){
  u=u.replace(/[\u200c\u200d]/g,"");
  let o="";
  for(let i=0;i<u.length;i++){
-  const c=u[i],n=u[i+1];
-  if(u.startsWith("क्ष",i)||u.startsWith("ज्ञ",i)){o+=u[i]==="क"?"ksh":"gy";i+=2;if(!RM[u[i+1]]&&u[i+1]!=="्"&&(isC(u[i+1])||RV[u[i+1]]))o+="a";continue}
-  if(isC(c)){
-   const r=RC[c];if(!r)return null;o+=r;
+  const c=u[i];
+  // क्ष and ज्ञ are single consonants written with three characters: they take vowel signs and halants like any other
+  const conj=u.startsWith("क्ष",i)?"ksh":u.startsWith("ज्ञ",i)?"gy":null;
+  if(conj||isC(c)){
+   const r=conj??RC[c];if(!r)return null;o+=r;
+   const n=u[i+(conj?3:1)];if(conj)i+=2;
    if(RM[n]){o+=RM[n];i++}
    else if(n==="्"){i++;const nx=u[i+1];
     if(!isC(nx)){o+="\\";continue}
@@ -156,10 +158,17 @@ export function makeDict(text){
  for(const line of text.split("\n")){
   const[w,...alias]=line.trim().replace(/[\u200c\u200d]/g,"").split(/\s+/);if(!w||w[0]==="#"||seen.has(w))continue;seen.add(w);
   const k=[...looseKeys(w),...alias.map(looseRoman)];
+  // words with ं ः ङ ञ are spelled with capital signs (M H Ng Ny): index that spelling too, so a word is always found by its own spelling
+  let own;if(/[ंःङञ]/.test(w)){own=toRoman(w);if(own)k.push(looseRoman(own))}
   // s: the same keys without any "a", so a dropped or extra schwa still matches (sagarmatha, nepal)
   // r (the Romanized spelling) is worked out only for words that actually match, see spell()
-  W.push({u:w,k,s:k.map(x=>x.replace(/a/g,"")),r:undefined})}
- return{
+  W.push({u:w,k,s:k.map(x=>x.replace(/a/g,"")),r:own})}
+ const known=new Set(seen);
+ const self={
+  // is this exactly a dictionary word?
+  has:u=>known.has(u),
+  // does the dictionary know what was typed: its exact result is a word, or some word matches its sounds
+  known:r=>known.has(roman(r).u)||self.roman(r,1).length>0,
   // romanized word -> best Unicode words: exact sound matches, then schwa-tolerant ones, then completions
   roman(r,max=6){const k=looseRoman(r),ks=k.replace(/a/g,"");if(!k)return[];const ex=[],near=[],pre=[];
    // the first `max` matches are enough, and a word with no exact Romanized spelling is skipped
@@ -173,4 +182,4 @@ export function makeDict(text){
   // Unicode prefix -> completions
   prefix(u,max=6){if(!u)return[];return W.filter(w=>w.u.length>u.length&&w.u.startsWith(u)).slice(0,max)},
   size:W.length};
-}
+ return self}

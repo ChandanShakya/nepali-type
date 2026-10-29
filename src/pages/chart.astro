@@ -4,6 +4,7 @@ import "../styles/base.css";
 import {REPO, GITHUB_ICON} from "../data/site.js";
 import Cell from "../components/Cell.astro";
 import wordList from "../data/words.txt?raw";
+import extList from "../data/words-ext.txt?raw";
 import {R,SH2,P,roman,toPreeti} from "../scripts/nepali.js";
 import {VOWELS,CONSONANT_ROWS,CONSONANTS,MATRAS,CONJUNCTS,PUNCT,SPECIALS,entry} from "../scripts/charts.js";
 
@@ -20,13 +21,19 @@ const words = ["namaste", "nepaal", "dhanyawaad", "kShetra", "gyaan", "shrii", "
 const title = "Nepali Typing Cheatsheet & Guide: Romanized Nepali and Preeti Keyboard Layout";
 const desc = "How to type Nepali: every Romanized spelling, the full Preeti / Devanagari font keyboard layout, the vowel table (बाह्रखरी), half letters, conjuncts and a guide to every Nepali Type feature.";
 // the dictionary size, rounded down to the nearest 500 so the text stays true as words are added
-const dictCount = (Math.floor(wordList.split("\n").filter((l) => l && l[0] !== "#").length / 500) * 500).toLocaleString("en");
+const count = (t: string) => t.split("\n").filter((l) => l && l[0] !== "#").length;
+const dictCount = (Math.floor((count(wordList) + count(extList)) / 1000) * 1000).toLocaleString("en");
 // every feature, documented once here: [title, how it works]
 const features: [string, string][] = [
   ["Typing modes", "The key at the bottom left opens a menu with three modes: <b>Direct</b>, <b>Romanized</b> and <b>Preeti</b>. Direct is the default on a first visit and your last choice is remembered. The installed app has a shortcut for each (<kbd>/?m=direct</kbd>, <kbd>/?m=roman</kbd>, <kbd>/?m=preeti</kbd>)."],
   ["Direct mode: type in the box", "Type Romanized letters straight into the Unicode box. Each word turns into Nepali when you press <b>space</b>, a punctuation key or <b>Enter</b>: <kbd>namaste</kbd> + space → नमस्ते, <kbd>.</kbd> → ।, digits → ०–९. A word that is not in the dictionary but sounds exactly like one becomes that dictionary word (<kbd>kathmandu</kbd> → काठमाडौं). While you type, the chips above the keyboard show what the word will become, with dictionary words beside it: tap one, or press <kbd>Tab</kbd> for the first. <b>Backspace right after a conversion gives your letters back</b> so you can fix a slip. <kbd>Ctrl</kbd>+<kbd>Z</kbd> still undoes, you can edit anywhere in the text, and the Romanized, Assumed and Preeti boxes below follow as you type."],
   ["Romanized typing", "Type Nepali the way it sounds in English letters: <kbd>ka</kbd> क, <kbd>kaa</kbd> का, <kbd>namaste</kbd> नमस्ते. A consonant alone keeps its <b>a</b> sound and two consonants join (<kbd>kt</kbd> क्त). Works with any phone keyboard."],
-  ["Dictionary suggestions", `Over ${dictCount} common words and verb forms are built in and work offline. Loose spellings still find the word: <kbd>nepal</kbd> → नेपाल, <kbd>bikas</kbd> → विकास, <kbd>kathmandu</kbd> → काठमाडौं. Tap a blue suggestion, or press <kbd>Tab</kbd> on a computer (in Direct mode too). In font keys mode the dictionary finishes the word you are typing.`],
+  ["Dictionary suggestions", `Over ${dictCount} words are built in and work offline: about 4,500 curated everyday words, places, names and verb forms, then the common words of the Nepali Wikipedia. Loose spellings still find the word: <kbd>nepal</kbd> → नेपाल, <kbd>bikas</kbd> → विकास, <kbd>kathmandu</kbd> → काठमाडौं. Tap a blue suggestion, or press <kbd>Tab</kbd> on a computer (in Direct mode too). In font keys mode the dictionary finishes the word you are typing.`],
+  ["Learned spellings", "When you pick a suggestion for a spelling, Direct mode remembers it on your device and uses it next time. Typing the same letters again after a Backspace keeps your spelling instead. <b>Chart → Help</b> can export, import or clear this together with your saved words."],
+  ["Keys in Direct mode", "While a word is pending: <kbd>Space</kbd> converts it, <kbd>Tab</kbd> takes the first dictionary word, <kbd>↑</kbd> <kbd>↓</kbd> walk the suggestions (then <kbd>Space</kbd>), <kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>5</kbd> take one, <kbd>Esc</kbd> keeps the word as English. The ↶ button undoes the last step on a phone."],
+  ["Convert a file", "<a href=\"/convert/\">Convert a Preeti file</a>: drop a Word (.docx) or text (.txt) file typed in Preeti and download it as Unicode. It happens in your browser; nothing is uploaded."],
+  ["Typing practice", "<a href=\"/practice/\">Typing practice</a>: a short passage, the next Preeti key underlined, speed (WPM) and accuracy. Your best score stays on your device."],
+  ["Share to Nepali Type", "On Android, with the app installed, share text from another app to Nepali Type. It lands in the Direct box, where a hint offers to convert Preeti or Latin text."],
   ["Live hints", "The bar above the keyboard shows what each key did and what you can type next: after <kbd>k</kbd> it offers ख, का, कि and the rest. Tap a hint to type it."],
   ["Preeti mode: type or paste", "Pick <b>Preeti</b> in the mode menu at the bottom left (there the key reads <b>ABC</b>, and the menu takes you back). The Preeti box is a normal text box: <b>type</b> with your keyboard exactly as you would in Word with the Preeti font, or <b>paste</b> Preeti text, for example copied from a Word file, and it becomes Unicode and Romanized at once. On a phone use the on-screen Preeti keyboard and the <b>Paste</b> button. <b>ि</b> is typed before its letter and reph र् after it; the app puts both in the right Unicode order. <b>Shift</b>: tap once for the next key, twice to lock."],
   ["Cursor and editing", "Click or tap in the Preeti box to place the caret, select and replace text, undo, or <b>drag the space bar</b> left or right (like Gboard) to move it. Typing, ⌫, hints, dictionary words and the on-screen keys all work at the caret."],

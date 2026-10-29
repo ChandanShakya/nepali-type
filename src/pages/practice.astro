@@ -1,0 +1,66 @@
+---
+import "../styles/base.css";
+import {GITHUB_ICON, REPO} from "../data/site.js";
+const site = Astro.site?.href ?? "/";
+const url = new URL("/practice/", site).href;
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Typing practice | Nepali Type</title>
+<meta name="description" content="Practise typing Nepali with the Preeti keys: a short passage, the next key to press, speed and accuracy.">
+<link rel="canonical" href={url}>
+<meta name="theme-color" content="#faf8f5">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<script is:inline>
+try{const t=localStorage.getItem("nw-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}
+</script>
+<style is:global>
+html,body{height:auto}
+.wrap{max-width:680px;margin:0 auto;padding:0 16px 48px}
+.top{position:sticky;top:0;z-index:3;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;padding-top:max(10px,env(safe-area-inset-top))}
+.top .in{max-width:680px;margin:0 auto;padding:0 16px;display:flex;align-items:center;gap:10px}
+.logo{width:32px;height:32px;border-radius:9px;background:var(--ac);color:var(--ac-fg);display:grid;place-items:center;font-size:20px;font-weight:700;line-height:1;padding-top:.13em;flex:none;text-decoration:none}
+.top b{flex:1;font-size:17px}
+h1{font-size:clamp(24px,5vw,32px);letter-spacing:-.02em;margin:24px 0 6px}
+.lead{color:var(--mut);margin:0 0 18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+.bt{height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--fg);text-decoration:none}
+.bt.p{background:var(--ac);border-color:var(--ac);color:var(--ac-fg)}
+.state{color:var(--mut);font-size:14px;margin:10px 0 0}
+footer{margin-top:28px;color:var(--mut);font-size:13px}
+footer a{color:var(--ac)}
+#tg{font-size:26px;line-height:1.6;margin:0 0 12px}
+#ks{font:var(--fs,20px)/1.6 ui-monospace,"SF Mono",Menlo,Consolas,monospace;word-break:break-all;margin:0 0 12px;min-height:3.2em}
+#ks .g{color:#1a7f37}#ks .b{color:var(--ac);text-decoration:underline}#ks .n{border-bottom:2px solid var(--fg)}
+:root[data-theme="dark"] #ks .g{color:#56d364}
+#ti{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:var(--fs,20px)/1.4 ui-monospace,Menlo,Consolas,monospace;background:var(--surface);color:var(--fg)}
+#ti:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-soft)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+#res{font-weight:650}
+</style>
+</head>
+<body>
+<header class="top">
+ <div class="in"><a class="logo d" href="/" aria-label="Back to Nepali Type">क</a><b>Typing practice</b><a class="bt" href="/">Type →</a></div>
+</header>
+<main class="wrap">
+<h1>Typing practice</h1>
+ <p class="lead">Type the passage with the Preeti keys. The next key is underlined. Best with a computer keyboard.</p>
+ <div class="card">
+  <div id="tg" class="d"></div>
+  <div id="ks" aria-live="off"></div>
+  <input id="ti" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Type the keys here" placeholder="Start typing to begin">
+  <div class="row"><button class="bt" id="nx">New passage</button><button class="bt" id="rs">Restart</button><span id="res"></span></div>
+ </div>
+ <p class="state" id="bs"></p>
+ <footer><a href="/">Nepali Type</a> · <a href="/chart/">Cheatsheet</a> · <a href={REPO} target="_blank" rel="noopener">GitHub</a></footer>
+</main>
+<script>
+import "../scripts/practice.js";
+</script>
+</body>
+</html>

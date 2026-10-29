@@ -381,7 +381,7 @@
 फूल
 कमल
 पात
-जङ्गल
+जङ्गल ~jungle
 नदी
 खोला
 ताल
@@ -400,6 +400,7 @@
 होटल hotel
 पसल
 स्कुल school
+स्कूल ~school ~skool
 विद्यालय
 कलेज college
 विश्वविद्यालय
@@ -4377,7 +4378,7 @@
 रहेन
 बीरगञ्ज birgunj birganj
 वीरगञ्ज birgunj
-जनकपुरधाम janakpur
+जनकपुरधाम janakpurdham
 कीर्तिपुर kirtipur
 थानकोट thankot
 बनेपा banepa
@@ -4499,7 +4500,7 @@
 गिरी giri
 भट्ट bhatta
 कुँवर kunwar
-बुवा ~bua
+बुवा ~bua ~buwa
 मायालु
 पहिला ~paila
 सामान

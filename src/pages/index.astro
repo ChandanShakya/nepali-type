@@ -82,7 +82,8 @@ html:not(.roman) #pk .lab{padding-right:100px}
 /* collapsed (top bar hidden): no card titles, icon-only buttons, room for the restore button */
 .hd-off .acts .bt .tx{display:none}
 .hd-off .acts .bt svg{display:inline-block!important}
-.hd-off .acts .bt,#cl{padding:0;width:38px}
+.hd-off .acts .bt,#cl,#undo{padding:0;width:38px}
+#undo{display:none}.direct #undo{display:inline-flex}
 #out{min-height:96px;padding:0 16px 14px;font-size:var(--fs);line-height:1.6;word-break:break-word;white-space:pre-wrap}
 #out.e{color:var(--mut);line-height:1.5}
 #out.e b{color:var(--fg)}
@@ -116,6 +117,7 @@ html:not(.roman) #pk{order:-1}
 #sug::-webkit-scrollbar{display:none}
 .sg{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:3px 12px;text-align:center;line-height:1.2;min-width:48px;scroll-snap-align:start;animation:pop .18s ease-out both}
 .sg.c{border-color:var(--ac);background:var(--ac-soft)}
+.sg.on{outline:2px solid var(--fg);outline-offset:1px}
 .sg.w{border-color:var(--blue);background:var(--half)}
 .sg.w .d{font-weight:600}
 .sg.f{border-style:dashed}
@@ -262,6 +264,7 @@ li{margin:5px 0}
   <div class="acts">
    <button class="bt fav" id="fav" aria-pressed="false" aria-label="Save the last word" title="Save the last word"><Fragment set:html={star}/><span class="tx">Save</span></button>
    <span class="sp"></span>
+   <button class="bt" id="undo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
    <button class="bt" id="cl" aria-label="Clear" title="Clear"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"/></svg></button>
   </div>
  </section>

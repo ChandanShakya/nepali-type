@@ -209,7 +209,7 @@ console.log("report endpoint and issue list checked");
   const x="ma ghar",y=commit(x,x.length,3);assert.equal(y,null);   // only "ar" typed: still part of the word
   assert.equal(commit("'a ",3,3).text,"'अ ")}   // a quote mark stays
  // the dictionary spelling wins when the literal reading is not a word (kathmandu is काठमाडौं, not कथ्मन्दु)
- {const D=makeDict(readFileSync("src/data/words.txt","utf8")),smart=(run,lit)=>{if(run.length<3||D.has(lit))return null;const w=D.best(run);return w&&w.u!==lit?w.u:null};
+ {const D=makeDict(readFileSync("src/data/words.txt","utf8")),smart=(run,lit)=>{if(run.length<3||D.core(lit))return null;const w=D.best(run);return w&&w.u!==lit?w.u:null};
   const typeS=s=>{let v="",c=0;for(const ch of s){v+=ch;c++;const r=commit(v,c,1,smart);if(r){v=v.slice(0,r.from)+r.text;c=v.length}}return v};
   assert.equal(typeS("kathmandu "),"काठमाडौं ");assert.equal(typeS("vayo "),"भयो ");assert.equal(typeS("tapaailai "),"तपाईंलाई ");
   assert.equal(typeS("ma "),"म ");assert.equal(typeS("namaste "),"नमस्ते ");
@@ -226,3 +226,31 @@ console.log("report endpoint and issue list checked");
  // Preeti to Unicode never adds a joiner after a final halant
  assert.equal(conv(";G"),"सन्");assert.ok(!/\u200d/.test(clean(conv("g]kfn ;G"))));
  console.log("commas, round-letter rakar, no joiner")}
+
+// ---------- Preeti .docx -> Unicode .docx ----------
+{const {convertDocx,makeZip,readFiles,readZip}=await import("./src/scripts/docx.js");
+ const W='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+ const styles=`<w:styles ${W}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="paragraph" w:styleId="Nep"><w:rPr><w:rFonts w:ascii="Preeti" w:hAnsi="Preeti"/></w:rPr></w:style></w:styles>`;
+ // "l" + ";" is सि: the ि key and its letter sit in different runs; the middle run is English; the last paragraph takes Preeti from its style
+ const doc=`<?xml version="1.0"?><w:document ${W}><w:body>`+
+  `<w:p><w:r><w:rPr><w:rFonts w:ascii="Preeti" w:hAnsi="Preeti"/><w:sz w:val="28"/></w:rPr><w:t>g]kfn l</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Preeti" w:hAnsi="Preeti"/></w:rPr><w:t>;</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Calibri"/></w:rPr><w:t xml:space="preserve"> Hello &amp; bye</w:t></w:r></w:p>`+
+  `<w:p><w:pPr><w:pStyle w:val="Nep"/></w:pPr><w:r><w:t>d]/f] gfd</w:t></w:r></w:p>`+
+  `</w:body></w:document>`;
+ const buf=await makeZip({"[Content_Types].xml":"<Types/>","word/document.xml":doc,"word/styles.xml":styles,"word/media/a.bin":"keep me"});
+ const r=await convertDocx(buf),files=await readFiles(r.data);
+ const texts=[...files["word/document.xml"].matchAll(/<w:t[^>]*>([^<]*)<\/w:t>/g)].map(m=>m[1]);
+ assert.equal(r.runs,3);
+ assert.ok(texts.includes("नेपाल सि"),texts.join("|"));                 // joined across the run edge, ि in the right place
+ assert.ok(texts.includes(" Hello & bye".replace("&","&amp;")));         // English run untouched
+ assert.ok(texts.includes("मेरो नाम"));                                  // font from the paragraph style
+ assert.ok(/<w:rFonts w:ascii="Mangal"/.test(files["word/document.xml"])&&!/Preeti/.test(files["word/document.xml"]));
+ assert.ok(/<w:sz w:val="28"\/><w:szCs w:val="28"\/>/.test(files["word/document.xml"]));
+ assert.equal(files["word/media/a.bin"],"keep me");assert.equal(readZip(r.data).length,4);
+ // a file with no Preeti text reports zero runs and is returned unchanged
+ assert.equal((await convertDocx(await makeZip({"word/document.xml":`<w:document ${W}><w:body><w:p><w:r><w:t>hi</w:t></w:r></w:p></w:body></w:document>`}))).runs,0);
+ console.log("docx converts")}
+
+// the practice passages type back exactly from their Preeti keys
+{const {PASSAGES}=await import("./src/data/passages.js");
+ for(const t of PASSAGES)assert.equal(clean(conv(toPreeti(t))),t,t);
+ console.log(PASSAGES.length,"practice passages round-trip")}

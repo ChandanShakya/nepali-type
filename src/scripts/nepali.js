@@ -163,45 +163,58 @@ export function looseKeys(u,cb="n"){
  // people text v for भ (vayo, vaneko): loosely that is a b, so index the bh words without the h too
  return ks.concat(ks.filter(k=>k.includes("bh")).map(k=>k.replace(/bh/g,"b")));
 }
+// The dictionary has two tiers: the curated words (tier 0, in words.txt) and the common words of the Nepali Wikipedia (tier 1, in
+// words-ext.txt, added later in slices). Tier 0 always ranks first, so a bigger list never pushes a familiar word down.
 export function makeDict(text){
- const seen=new Set(),W=[],readings=new Map();
- for(const line of text.split("\n")){
-  const[w,...alias]=line.trim().replace(/[\u200c\u200d]/g,"").split(/\s+/);if(!w||w[0]==="#"||seen.has(w))continue;seen.add(w);
-  // an alias starting with ~ only helps matching (texting spellings: ~vayo); the first other alias is also how the word reads (kathmandu)
-  const k=[...looseKeys(w),...alias.map(a=>looseRoman(a.replace(/^~/,"")))],shown=alias.find(a=>!a.startsWith("~"));
-  if(shown)readings.set(w,shown);
-  // words with ं ः ङ ञ are spelled with capital signs (M H Ng Ny): index that spelling too, so a word is always found by its own spelling
-  let own;if(/[ंःङञ]/.test(w)){own=toRoman(w);if(own)k.push(looseRoman(own))}
-  // s: the same keys without any "a", so a dropped or extra schwa still matches (sagarmatha, nepal)
-  // r (the Romanized spelling) is worked out only for words that actually match, see spell()
-  W.push({u:w,k,s:k.map(x=>x.replace(/a/g,"")),r:own})}
- const known=new Set(seen);
+ const seen=new Set(),core=new Set(),T=[[],[]],readings=new Map();
+ function add(text,tier=0){
+  for(const line of text.split("\n")){
+   const[w,...alias]=line.trim().replace(/[\u200c\u200d]/g,"").split(/\s+/);if(!w||w[0]==="#"||seen.has(w))continue;seen.add(w);
+   // an alias starting with ~ only helps matching (texting spellings: ~vayo); the first other alias is also how the word reads (kathmandu)
+   const k=[...looseKeys(w),...alias.map(a=>looseRoman(a.replace(/^~/,"")))],shown=alias.find(a=>!a.startsWith("~"));
+   if(shown)readings.set(w,shown);
+   // words with ं ः ङ ञ are spelled with capital signs (M H Ng Ny): index that spelling too, so a word is always found by its own spelling
+   let own;if(/[ंःङञ]/.test(w)){own=toRoman(w);if(own)k.push(looseRoman(own))}
+   // s: the same keys without any "a", so a dropped or extra schwa still matches (sagarmatha, nepal)
+   // r (the Romanized spelling) is worked out only for words that actually match, see spell()
+   if(!tier)core.add(w);
+   T[tier].push({u:w,k,s:k.map(x=>x.replace(/a/g,"")),r:own,i:T[tier].length})}}
+ add(text);
+ const spell=w=>w.r===undefined?(w.r=toRoman(w.u)):w.r;
  const self={
+  add,
   // is this exactly a dictionary word?
-  has:u=>known.has(u),
+  has:u=>seen.has(u),
+  // is it a curated word? (the words an automatic correction may trust: the others include the misspellings Wikipedia contains)
+  core:u=>core.has(u),
   // how a dictionary word reads, when it has a familiar spelling (काठमाडौं: kathmandu); otherwise undefined
   reading:u=>readings.get(u),
   // does the dictionary know what was typed: its exact result is a word, or some word matches its sounds
-  known:r=>known.has(roman(r).u)||self.roman(r,1).length>0,
-  // the dictionary word that sounds like what was typed (kathmandu: काठमाडौं); failing that, one that differs only in
-  // its inherent a's (sarkar: सरकार, pradhanmantri: प्रधानमन्त्री). Earlier words rank higher.
+  known:r=>seen.has(roman(r).u)||self.roman(r,1).length>0,
+  // The dictionary word that sounds like what was typed (kathmandu: काठमाडौं); failing that, one that differs only in its
+  // inherent a's (sarkar: सरकार, pradhanmantri: प्रधानमन्त्री). Used to correct a word without asking, so it trusts the curated
+  // words and only the 8,000 most common of the others.
   best(r){const k=looseRoman(r);if(!k)return;const ks=k.replace(/a/g,"");let near;
-   const ok=w=>{if(w.r===undefined)w.r=toRoman(w.u);return w.r};
-   for(const w of W){if(w.k.includes(k)&&ok(w))return w;if(!near&&ks.length>2&&w.s.includes(ks)&&ok(w))near=w}
+   for(const t of T)for(const w of t){if(w.i>=8000&&t===T[1])break;
+    if(w.k.includes(k)&&spell(w))return w;if(!near&&ks.length>2&&w.s.includes(ks)&&spell(w))near=w}
    return near},
-  // romanized word -> best Unicode words: exact sound matches, then schwa-tolerant ones, then completions
-  roman(r,max=6){const k=looseRoman(r),ks=k.replace(/a/g,"");if(!k)return[];const ex=[],near=[],pre=[];
-   // the first `max` matches are enough, and a word with no exact Romanized spelling is skipped
-   const spell=w=>w.r===undefined?(w.r=toRoman(w.u)):w.r;
-   for(const w of W){
-    if(w.k.includes(k)){if(spell(w))ex.push(w)}
-    else if(ks.length>1&&w.s.includes(ks)){if(near.length<max&&spell(w))near.push(w)}
-    else if(k.length>1&&pre.length<max&&w.k.some(x=>x.startsWith(k))){if(spell(w))pre.push(w)}
-    if(ex.length>=max)break}
-   return ex.concat(near,pre).slice(0,max)},
+  // romanized word -> best Unicode words: exact sound matches, then schwa-tolerant ones, then completions. The curated words
+  // come first, then the others fill what is left.
+  roman(r,max=6){const k=looseRoman(r),ks=k.replace(/a/g,"");if(!k)return[];const out=[];
+   for(const t of T){
+    if(out.length>=max)break;
+    const ex=[],near=[],pre=[];
+    // the first `max` matches are enough, and a word with no exact Romanized spelling is skipped
+    for(const w of t){
+     if(w.k.includes(k)){if(spell(w))ex.push(w)}
+     else if(ks.length>1&&w.s.includes(ks)){if(near.length<max&&spell(w))near.push(w)}
+     else if(k.length>1&&pre.length<max&&w.k.some(x=>x.startsWith(k))){if(spell(w))pre.push(w)}
+     if(ex.length>=max)break}
+    for(const w of ex.concat(near,pre))if(out.length<max&&!out.includes(w))out.push(w)}
+   return out},
   // Unicode prefix -> completions
-  prefix(u,max=6){if(!u)return[];return W.filter(w=>w.u.length>u.length&&w.u.startsWith(u)).slice(0,max)},
-  size:W.length};
+  prefix(u,max=6){if(!u)return[];const out=[];for(const t of T)for(const w of t){if(out.length>=max)return out;if(w.u.length>u.length&&w.u.startsWith(u))out.push(w)}return out},
+  get size(){return seen.size}};
  return self}
 
 // ---------- reading-friendly Romanization: approximate, meant to be read aloud, not typed back ----------

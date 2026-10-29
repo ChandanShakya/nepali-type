@@ -1,0 +1,60 @@
+---
+import "../styles/base.css";
+import {GITHUB_ICON, REPO} from "../data/site.js";
+const site = Astro.site?.href ?? "/";
+const url = new URL("/convert/", site).href;
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Convert a file | Nepali Type</title>
+<meta name="description" content="Turn a Preeti Word (.docx) or text file into Unicode, in your browser. Nothing is uploaded.">
+<link rel="canonical" href={url}>
+<meta name="theme-color" content="#faf8f5">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<script is:inline>
+try{const t=localStorage.getItem("nw-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}
+</script>
+<style is:global>
+html,body{height:auto}
+.wrap{max-width:680px;margin:0 auto;padding:0 16px 48px}
+.top{position:sticky;top:0;z-index:3;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;padding-top:max(10px,env(safe-area-inset-top))}
+.top .in{max-width:680px;margin:0 auto;padding:0 16px;display:flex;align-items:center;gap:10px}
+.logo{width:32px;height:32px;border-radius:9px;background:var(--ac);color:var(--ac-fg);display:grid;place-items:center;font-size:20px;font-weight:700;line-height:1;padding-top:.13em;flex:none;text-decoration:none}
+.top b{flex:1;font-size:17px}
+h1{font-size:clamp(24px,5vw,32px);letter-spacing:-.02em;margin:24px 0 6px}
+.lead{color:var(--mut);margin:0 0 18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+.bt{height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--fg);text-decoration:none}
+.bt.p{background:var(--ac);border-color:var(--ac);color:var(--ac-fg)}
+.state{color:var(--mut);font-size:14px;margin:10px 0 0}
+footer{margin-top:28px;color:var(--mut);font-size:13px}
+footer a{color:var(--ac)}
+.dz{display:grid;place-items:center;gap:6px;text-align:center;border:2px dashed var(--line);border-radius:16px;padding:36px 16px;cursor:pointer;color:var(--mut)}
+.dz.on,.dz:hover{border-color:var(--ac);color:var(--fg)}
+.dz b{color:var(--fg);font-size:17px}
+.dz input{position:absolute;width:1px;height:1px;opacity:0}
+#out{margin-top:14px}
+#pv{margin:0 0 12px;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-word;font:var(--fs,20px)/1.6 "Noto Sans Devanagari","Nirmala UI","Mangal",sans-serif}
+</style>
+</head>
+<body>
+<header class="top">
+ <div class="in"><a class="logo d" href="/" aria-label="Back to Nepali Type">क</a><b>Convert a file</b><a class="bt" href="/">Type →</a></div>
+</header>
+<main class="wrap">
+<h1>Convert a Preeti file</h1>
+ <p class="lead">Drop a Word (.docx) or text (.txt) file that was typed in Preeti. You get Unicode back, and the file never leaves your device.</p>
+ <label class="dz" id="dz"><b>Choose a file</b><span>or drop it here · .docx or .txt</span><input id="f" type="file" accept=".docx,.txt,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></label>
+ <p class="state" id="st" role="status"></p>
+ <div class="card" id="out" hidden><pre id="pv"></pre><button class="bt p" id="dl">Download</button></div>
+ <footer><a href="/">Nepali Type</a> · <a href="/chart/">Cheatsheet</a> · <a href={REPO} target="_blank" rel="noopener">GitHub</a></footer>
+</main>
+<script>
+import "../scripts/convert.js";
+</script>
+</body>
+</html>

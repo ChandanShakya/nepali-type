@@ -18,6 +18,7 @@ Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali 
 | **Devanagari font keys (Preeti layout)** | The classic font keyboard, keystroke for keystroke, as in Word or LibreOffice with the Preeti font. Use the on-screen keyboard or a physical one. ि is typed before its letter and reph र् after it; the app puts both in the right Unicode order. |
 | **Movable cursor** | In font keys mode you can insert anywhere: **tap the text**, **drag the space bar** left or right (like Gboard), or use the arrow keys, Home, End and Delete. Typing, ⌫, hints and dictionary words all work at the cursor. |
 | **Three outputs** | Unicode (for the web and modern apps), Romanized spelling (to learn a word or type it again) and Devanagari font keystrokes (to paste into Preeti documents). |
+| **Words view** | The **Words** button beside Save shows the text word by word: the Unicode word large, a friendly **Reading** spelling under it (`kathmadaun`, approximate, to read aloud) and the exact **Typing** spelling in small grey type (`kaaThamaaDauM`, which you can type back). Each row can be switched off, and copy gives pairs like `नमस्ते (namaste)`. |
 | **Same text in both modes** | Switching between Romanized and font keys converts your text, so nothing is lost. |
 | **Copy any box** | Each box has a copy button in its top-right corner. A tick shows which one was copied. |
 | **Saved words** | **★ Save** keeps the word before the cursor. Saved words show up in the suggestion bar and under **★ Saved** (tap to type, × to remove). |
@@ -42,6 +43,10 @@ Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali 
 | `\` | ् (halant) | `.` | । | `0`–`9` | ०–९ |
 
 Two consonants in a row join (`kt` → क्त). `n` before k, kh, g or gh becomes ङ (`gangaa` → गङ्गा).
+
+## Readable spelling
+
+The Words view uses `toReading()` in `src/scripts/nepali.js`. It follows Nepali rules for the inherent "a": dropped at the end of a word after a single consonant (`kamal`), kept after a conjunct or nasal (`garchha`, `aaunchha`), dropped in the second syllable (`sarkar`, `kasri`) but not before a conjunct (`namaste`, `dhanyabad`). It is a reading aid only and cannot be converted back; `toRoman()` is the exact spelling. `npm test` lists the expected spellings.
 
 ## Font keys notes
 
@@ -74,7 +79,7 @@ src/
   ../.github/ISSUE_TEMPLATE/  issue forms for the report types
   pages/chart.astro     printable cheatsheet, rendered at build time
   styles/base.css       theme tokens shared by both pages
-  scripts/nepali.js     conversion logic (Preeti ⇄ Unicode, Romanized → Unicode), no DOM
+  scripts/nepali.js     conversion logic (Preeti ⇄ Unicode, Romanized ⇄ Unicode, readable spelling), no DOM
   scripts/app.js        UI: modes, keyboard, hints, dictionary, saved words, theme, install
   scripts/charts.js     the alphabet shown by the in-app chart and the cheatsheet
   components/Cell.astro one cheatsheet cell

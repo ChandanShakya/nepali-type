@@ -1,4 +1,4 @@
-import {R,SH,SH2,KEYS,P,conv,clean,toPreeti,toRoman,roman,ROMAN,makeDict} from "./nepali.js";
+import {R,SH,SH2,KEYS,P,conv,clean,toPreeti,toRoman,toReading,roman,ROMAN,makeDict} from "./nepali.js";
 import {REPO} from "../data/site.js";
 import {REPORTS} from "../data/reports.js";
 import {VOWELS,CONSONANT_ROWS,CONSONANTS,MATRAS,CONJUNCTS,PUNCT,SPECIALS,entry,findEntries} from "./charts.js";
@@ -65,10 +65,33 @@ function render(u,at=-1){
  $("#cnt").textContent=c?w+(w>1?" words · ":" word · ")+[...c].length+" chars":"";
  // Romanized spelling of each word (font keys mode); a word with no exact spelling is shown as is
  if(mode==="preeti")$("#rom").textContent=clean(u).split(/(\s+)/).map(w=>/\S/.test(w)?toRoman(w)??w:w).join("");
+ if(pv)drawWords(clean(u));
  $("#pre").innerHTML=mode==="preeti"&&buf?keysHTML(buf.slice(0,cur))+CARET+keysHTML(buf.slice(cur)):keysHTML(toPreeti(uni(),true));
  const cw=curWord(),on=!!cw&&favs.some(f=>f.u===cw);
  $("#fav").classList.toggle("on",on);$("#fav").setAttribute("aria-pressed",on);
 }
+
+// ---------- words view: each word with its reading and its exact typing spelling ----------
+let pv=store.get("nw-pv")==="1",pvr=store.get("nw-pvr")||"rt";       // on or off; which rows: r = Reading, t = Typing
+const wordParts=w=>{const t=toRoman(w)??"",r=toReading(w);return{u:w,r,t,same:t.toLowerCase()===r}};
+function drawWords(u){
+ const box=$("#pw");box.className=(pvr.includes("r")?"":"hr ")+(pvr.includes("t")?"":"ht");box.replaceChildren();
+ for(const tok of u.split(/(\s+)/)){
+  if(!tok)continue;
+  if(/^\s+$/.test(tok)){for(let i=0;i<(tok.match(/\n/g)||[]).length;i++){const b=document.createElement("div");b.className="wd nl";box.append(b)}continue}
+  const p=wordParts(tok),d=document.createElement("div");d.className="wd";
+  const row=(cls,text)=>{const e=document.createElement("span");e.className=cls;e.textContent=text;d.append(e)};
+  row("wu d",dsp(p.u));row("wr",p.r);
+  // the exact spelling is left out of a word when it is the same as the reading
+  if(p.t&&!p.same)row("wt",p.t);
+  box.append(d)}}
+// text for the copy button: "नमस्ते (namaste) नेपाल (nepal)", using the Reading row, else the Typing row
+const wordsText=()=>uni().split(/(\s+)/).map(tok=>{if(!tok||/^\s+$/.test(tok))return tok;const p=wordParts(tok),x=pvr.includes("r")?p.r:pvr.includes("t")?p.t:"";return x?tok+" ("+x+")":tok}).join("");
+function setWordsView(on){pv=on;store.set("nw-pv",on?"1":"0");$("#pc").hidden=!on;$("#pv").setAttribute("aria-pressed",on);$("#pv").classList.toggle("on",on);if(on)drawWords(clean(uni()))}
+function setRows(){store.set("nw-pvr",pvr);for(const[id,k] of [["tg-r","r"],["tg-t","t"]])$("#"+id).setAttribute("aria-pressed",pvr.includes(k));drawWords(clean(uni()))}
+$("#pv").onclick=()=>{buzz();setWordsView(!pv)};
+$("#tg-r").onclick=()=>{pvr=pvr.includes("r")?pvr.replace("r",""):pvr+"r";setRows()};
+$("#tg-t").onclick=()=>{pvr=pvr.includes("t")?pvr.replace("t",""):pvr+"t";setRows()};
 
 // ---------- Preeti layout mode ----------
 const before=()=>buf.slice(0,cur);
@@ -224,7 +247,7 @@ function cp(s){
 // corner copy buttons; the icon turns into a tick briefly so the box that was copied is clear
 const TICK='<svg viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>';
 document.querySelectorAll(".cc").forEach(b=>{const icon=b.innerHTML;b.onclick=()=>{
- const k=b.dataset.copy,s=k==="uni"?uni():k==="font"?preeti():mode==="roman"?rin.value:$("#rom").textContent;cp(s);if(!s)return;
+ const k=b.dataset.copy,s=k==="uni"?uni():k==="words"?wordsText():k==="font"?preeti():mode==="roman"?rin.value:$("#rom").textContent;cp(s);if(!s)return;
  b.innerHTML=TICK;b.classList.add("ok");setTimeout(()=>{b.innerHTML=icon;b.classList.remove("ok")},1200)}});
 $("#cl").onclick=()=>{
  const was=mode==="roman"?rin.value:buf;if(!was)return;
@@ -385,7 +408,7 @@ note("s","Punctuation and digits.");cells("s",PUNCT);
 note("x","Extra font glyphs. In Windows apps they need the Alt code shown; here you just tap them. ॐ and ऽ are Unicode-only.");
 grid("x",SPECIALS.map(e=>[cellHTML(e,e.u.startsWith("्")?"◌"+e.u:dsp(e.u)),()=>typeEntry(e)]));
 note("s","Signs: <kbd class=kr>M</kbd> <kbd>+</kbd> ं &nbsp;<kbd class=kr>~</kbd> <kbd>F</kbd> ँ &nbsp;<kbd class=kr>H</kbd> <kbd>M</kbd> ः &nbsp;<kbd class=kr>\\</kbd> <kbd>\\</kbd> halant ्. Romanized <kbd class=kr>'</kbd> keeps letters apart (<kbd class=kr>ra'aa</kbd> रआ). Font keys: <kbd>m</kbd> is a hook (<kbd>km</kbd> फ, <kbd>em</kbd> झ, <kbd>pm</kbd> ऊ).");
-$("#p-i").innerHTML="<p class=nt><button class='bt p' id=watch>▶ Watch the demo</button> <a class=bt href=/chart/>Full cheatsheet</a> <button class=bt id=helprep>⚑ Report a problem or idea</button> <a class=bt href=/issues/>Open &amp; solved reports</a> <a class=bt href='"+$(".ib[href*=github]").href+"' target=_blank rel=noopener>GitHub</a></p><ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li>Switch modes with the <b>ABC / ⌨</b> key at the bottom left. <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Font keys</b> works like typing with a Devanagari font in Word or LibreOffice: each key is one glyph. It uses the <b>Preeti</b> layout, the most widely used one, so the copied font text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> by tapping the text, dragging the space bar, or with the arrow keys. Typing and ⌫ work at the cursor.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li>Every chart cell shows the letter, its <b class=kr>Romanized spelling</b> (blue) and its <b>font keys</b> (grey). Tap it to type it in the current mode. The <a href=/chart/>cheatsheet page</a> uses the same chart.</li><li><b>Blue keys</b> on the font keyboard are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>A <span class=sm>red</span> character in the Devanagari font box has no key in the Preeti font, for example ! - : ; and letters like ऑ ॉ. It is kept as it is, but it will not show correctly in a Preeti document.</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline.</li></ul>";
+$("#p-i").innerHTML="<p class=nt><button class='bt p' id=watch>▶ Watch the demo</button> <a class=bt href=/chart/>Full cheatsheet</a> <button class=bt id=helprep>⚑ Report a problem or idea</button> <a class=bt href=/issues/>Open &amp; solved reports</a> <a class=bt href='"+$(".ib[href*=github]").href+"' target=_blank rel=noopener>GitHub</a></p><ul class=nt><li><b>Romanized</b>: type English sounds and get Unicode plus the matching Devanagari font keystrokes. Works with any phone keyboard. Blue suggestions are dictionary words: tap one (or press <kbd>Tab</kbd>) to use it.</li><li>Switch modes with the <b>ABC / ⌨</b> key at the bottom left. <b>Chart</b> and <b>★ Saved</b> sit next to it. Hide the top bar with <b>⌃</b> for more room.</li><li><b>Font keys</b> works like typing with a Devanagari font in Word or LibreOffice: each key is one glyph. It uses the <b>Preeti</b> layout, the most widely used one, so the copied font text shows correctly in Preeti and fonts that share its layout.</li><li><b>Move the cursor</b> by tapping the text, dragging the space bar, or with the arrow keys. Typing and ⌫ work at the cursor.</li><li><b>Words</b> (the button beside Save) shows your text word by word: the Unicode word, a friendly <b>Reading</b> spelling to read aloud (approximate), and the exact <b>Typing</b> spelling you can type back. Switch either row off; copy gives <code>नमस्ते (namaste)</code> pairs.</li><li><b>★ Save</b> keeps the last word on this device. Saved words appear in the suggestion bar when you start a new word.</li><li><b>⇧</b> Shift: tap once for the next key, twice to lock, three times to release. On a physical keyboard just hold Shift.</li><li>Every chart cell shows the letter, its <b class=kr>Romanized spelling</b> (blue) and its <b>font keys</b> (grey). Tap it to type it in the current mode. The <a href=/chart/>cheatsheet page</a> uses the same chart.</li><li><b>Blue keys</b> on the font keyboard are half letters. They join with the next letter to make a conjunct.</li><li><b>ि</b> is typed before the letter or conjunct (<kbd>l</kbd>, then the letter). It is placed correctly for you.</li><li><b>Reph र्</b> is typed after the letter it sits over: <kbd>c</kbd><kbd>y</kbd><kbd>⇧[</kbd> gives अर्थ.</li><li><b>m</b> is not a letter. In the font it is a hook that changes the letter before it: <kbd>k</kbd><kbd>m</kbd> फ, <kbd>p</kbd><kbd>m</kbd> ऊ, <kbd>e</kbd><kbd>m</kbd> झ, <kbd>q</kbd><kbd>m</kbd> क्र, <kbd>Q</kbd><kbd>m</kbd> क्त. Anywhere else it shows as a red <span class=sm>m</span> and is left out when you copy. For म type <kbd>d</kbd>.</li><li><b>0f</b>, <b>if</b> and <b>If</b> are single letters (ण, ष, क्ष).</li><li>A <span class=sm>red</span> character in the Devanagari font box has no key in the Preeti font, for example ! - : ; and letters like ऑ ॉ. It is kept as it is, but it will not show correctly in a Preeti document.</li><li>The font layout assumes US QWERTY.</li><li>Install it with the <b>Install</b> button (Chrome, Edge, Android) or Share → Add to Home Screen (iPhone). It works offline.</li></ul>";
 $("#watch").onclick=()=>{document.body.classList.remove("open");openIntro()};
 $("#helprep").onclick=()=>{document.body.classList.remove("open");openReport()};
 }
@@ -401,4 +424,4 @@ $("#cq").addEventListener("input",()=>{
 const openSheet=id=>{buildChart();document.body.classList.add("open");show(id)};
 $("#chart").onclick=()=>{buzz();openSheet("c")};$("#saved").onclick=()=>{buzz();openSheet("f")};
 $("#x").onclick=$("#bd").onclick=()=>document.body.classList.remove("open");
-setMode(mode);
+setRows();setWordsView(pv);setMode(mode);

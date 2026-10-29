@@ -9,7 +9,7 @@ const video = new URL("/demo.mp4", site).href;
 const ld = JSON.stringify({"@context":"https://schema.org","@type":"WebApplication",name:"Nepali Type",url:site,description:desc,
   applicationCategory:"UtilitiesApplication",operatingSystem:"Any (web browser)",inLanguage:["ne","en"],isAccessibleForFree:true,
   offers:{"@type":"Offer",price:"0",priceCurrency:"USD"},image:new URL("/og.png", site).href,sameAs:[REPO],
-  featureList:["Romanized Nepali typing (ka → क)","Built-in Nepali dictionary suggestions","Preeti / Devanagari font keyboard layout","Movable cursor: tap text or drag the space bar","Unicode and Preeti output side by side","Saved words","Printable cheatsheet","Dark mode","Works offline, installable PWA"]});
+  featureList:["Romanized Nepali typing (ka → क)","Word-by-word view with a readable Romanized reading","Built-in Nepali dictionary suggestions","Preeti / Devanagari font keyboard layout","Movable cursor: tap text or drag the space bar","Unicode and Preeti output side by side","Saved words","Printable cheatsheet","Dark mode","Works offline, installable PWA"]});
 const copy = '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
 const star = '<svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>';
 const book = '<svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>';
@@ -54,6 +54,8 @@ header{display:flex;align-items:center;gap:6px;padding:10px 10px 6px 14px;paddin
 .ib{width:38px;height:38px;border-radius:19px;display:grid;place-items:center;color:var(--mut);flex:none}
 .ib:hover{background:var(--surface2);color:var(--fg)}
 .gh{fill:currentColor;stroke:none}
+#mode .tx{white-space:nowrap}
+@media (max-width:360px){.hd-off #mode .d{display:none}}
 #showhd{display:none}.hd-off #showhd{display:inline-flex;flex:.8 1 0}
 /* main: scrolls on its own, the dock stays put */
 #top{flex:1;overflow:auto;overscroll-behavior:contain;padding:4px 14px 12px;min-height:0;display:flex;flex-direction:column;gap:10px}
@@ -175,6 +177,20 @@ a.bt{color:inherit;text-decoration:none}
 .ch .x{position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:12px;background:var(--fg);color:var(--bg);font-size:13px;line-height:24px}
 .nt{color:var(--mut);font-size:13.5px;margin:8px 0}
 li{margin:5px 0}
+/* words view: each word with its reading and its exact typing spelling */
+.pt{display:flex;gap:6px;padding:8px 14px 0}
+.tg{height:30px;padding:0 13px;border-radius:15px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;color:var(--mut)}
+.tg[aria-pressed="true"]{background:var(--ac-soft);border-color:var(--ac);color:var(--ac)}
+#pw{display:flex;flex-wrap:wrap;gap:8px 6px;padding:10px 12px 6px;align-items:flex-start}
+#pw:empty::before{content:"Type something to see it word by word.";color:var(--mut);font-size:14px;padding:4px}
+.wd{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 11px 7px;border-radius:12px;background:var(--surface2);min-width:46px;text-align:center}
+.wu{font-size:30px;line-height:1.4}
+.wr{font-size:16px;font-weight:650;color:var(--ac);line-height:1.3}
+.wt{font:11.5px/1.3 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--mut)}
+.wd.nl{flex-basis:100%;height:0;padding:0;background:none;min-width:0}
+#pw.hr .wr,#pw.ht .wt{display:none}
+#pc .pn{margin:0 16px 12px;color:var(--mut);font-size:12.5px}
+.hd-off #pc .pt{padding-right:56px}
 /* report dialog */
 #rep{border:0;padding:0;border-radius:20px;background:var(--bg);color:var(--fg);width:min(480px,calc(100% - 24px));max-height:calc(100dvh - 24px);box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:auto}
 #rep::backdrop{background:rgba(0,0,0,.55)}
@@ -234,9 +250,17 @@ li{margin:5px 0}
   <div id="out" class="d e" aria-live="polite"></div>
   <div class="acts">
    <button class="bt fav" id="fav" aria-pressed="false" aria-label="Save the last word" title="Save the last word"><Fragment set:html={star}/><span class="tx">Save</span></button>
+   <button class="bt" id="pv" aria-pressed="false" aria-label="Show the text word by word, with its reading" title="Words view"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="6" rx="1.5"/><rect x="13" y="4" width="8" height="6" rx="1.5"/><path d="M3 15h8M13 15h8M3 19h5M13 19h5"/></svg><span class="tx">Words</span></button>
    <span class="sp"></span>
    <button class="bt" id="cl" aria-label="Clear" title="Clear"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"/></svg></button>
   </div>
+ </section>
+ <section class="card" id="pc" hidden>
+  <div class="lab"><span>Words</span></div>
+  <button class="cc" data-copy="words" aria-label="Copy the words with their reading" title="Copy the words with their reading"><Fragment set:html={copy}/></button>
+  <div class="pt"><button class="tg" id="tg-r" aria-pressed="true" title="Friendly spelling to read aloud">Reading</button><button class="tg" id="tg-t" aria-pressed="true" title="Exact spelling you can type back">Typing</button></div>
+  <div id="pw" aria-live="polite"></div>
+  <p class="pn"><b>Reading</b> is approximate, to read aloud. <b>Typing</b> is the exact spelling: type it in Romanized mode to get the same word.</p>
  </section>
  <section class="card" id="rc">
   <div class="lab"><span>Romanized</span></div>

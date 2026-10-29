@@ -183,3 +183,41 @@ export function makeDict(text){
   prefix(u,max=6){if(!u)return[];return W.filter(w=>w.u.length>u.length&&w.u.startsWith(u)).slice(0,max)},
   size:W.length};
  return self}
+
+// ---------- reading-friendly Romanization: approximate, meant to be read, not typed back ----------
+// "kathmadaun", "sarkar", "garchha". Long vowels are not doubled, and ट/त ड/द share one letter, so it cannot be
+// converted back; toRoman() above is the exact spelling. Rules for the inherent "a" follow Nepali:
+//  - dropped at the end of a word after a single consonant (kamal), kept after a conjunct or a nasal (garchha, bishwa, aaunchha)
+//  - dropped in the second syllable between two syllables (sarkar, kasri, gharma), but not before or inside a conjunct (namaste, dhanyabad)
+//    and not further along, where it would make clusters in joined words (uniharu, rashtriyasabha)
+const RD_C={"क":"k","ख":"kh","ग":"g","घ":"gh","ङ":"ng","च":"ch","छ":"chh","ज":"j","झ":"jh","ञ":"n","ट":"t","ठ":"th","ड":"d","ढ":"dh","ण":"n","त":"t","थ":"th","द":"d","ध":"dh","न":"n","प":"p","फ":"ph","ब":"b","भ":"bh","म":"m","य":"y","र":"r","ल":"l","व":"b","श":"sh","ष":"sh","स":"s","ह":"h"};
+const RD_M={"ा":"a","ि":"i","ी":"i","ु":"u","ू":"u","ृ":"ri","े":"e","ै":"ai","ो":"o","ौ":"au"};
+const RD_V={"अ":"a","आ":"aa","इ":"i","ई":"i","उ":"u","ऊ":"u","ऋ":"ri","ए":"e","ऐ":"ai","ओ":"o","औ":"au"};
+function readWord(w){
+ const U=[]; // unit: {c:[consonants of one cluster], v:vowel, fixed:vowel is written (not the inherent a), nas:ं ँ ः} or {raw}
+ for(let i=0;i<w.length;){
+  const ch=w[i];
+  if(RD_V[ch]){U.push({c:[],v:RD_V[ch],fixed:true,nas:""});i++;continue}
+  if(RD_C[ch]){
+   const c=[];let j=i;
+   const take=()=>{if(w.startsWith("क्ष",j)){c.push("ksh");j+=3}else if(w.startsWith("ज्ञ",j)){c.push("gy");j+=3}else{c.push(w[j]==="व"&&c.length?"w":RD_C[w[j]]);j++}};
+   take();
+   while(w[j]==="्"&&RD_C[w[j+1]]){j++;take()}
+   let v="a",fixed=false;
+   if(w[j]==="्"){j++;v="";fixed=true}else if(RD_M[w[j]]){v=RD_M[w[j]];fixed=true;j++}
+   U.push({c,v,fixed,nas:""});i=j;continue}
+  if("ंँः".includes(ch)&&U.length&&U.at(-1).raw===undefined){U.at(-1).nas=ch;i++;continue}
+  U.push({raw:ch==="।"||ch==="॥"?".":ch});i++}
+ const S=U.map((u,i)=>i).filter(i=>U[i].raw===undefined),L=S.at(-1);
+ const has=u=>u&&(u.raw!==undefined||u.v!=="");
+ // the end of the word: the inherent a goes after a single consonant, never from a one-syllable word
+ // (a nasal ं ँ before it counts like a conjunct; -iya words keep their a: rashtriya)
+ if(S.length>1){const e=U[L],b=U[S.at(-2)];if(!e.fixed&&!e.nas&&e.c.length===1&&!"ंँ".includes(b.nas||"-")&&!(e.c[0]==="y"&&b.v==="i"))e.v=""}
+ // the second syllable: between two syllables, and not touching a conjunct
+ {const u=U[1],p=U[0],n=U[2];
+  if(u&&u.raw===undefined&&!u.fixed&&!u.nas&&u.c.length===1&&u.c[0]!=="h"&&has(p)&&n&&n.raw===undefined&&n.v!==""&&n.c.length===1)u.v=""}
+ return U.map((u,i)=>{
+  if(u.raw!==undefined)return u.raw;
+  const nx=U[i+1],nasal=!u.nas?"":u.nas==="ः"?"h":u.nas==="ं"&&nx&&nx.c&&/^(p|ph|b|bh|m)/.test(nx.c[0]||"")?"m":"n";
+  return u.c.join("")+u.v+nasal}).join("")}
+export const toReading=u=>u.replace(/[‌‍]/g,"").split(/(\s+)/).map(w=>/^\s*$/.test(w)?w:readWord(w)).join("");

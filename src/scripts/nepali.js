@@ -179,6 +179,8 @@ export function makeDict(text){
   reading:u=>readings.get(u),
   // does the dictionary know what was typed: its exact result is a word, or some word matches its sounds
   known:r=>known.has(roman(r).u)||self.roman(r,1).length>0,
+  // the dictionary word that sounds exactly like what was typed (kathmandu: काठमाडौं), if there is one
+  exact(r){const k=looseRoman(r);if(!k)return;for(const w of W)if(w.k.includes(k)){if(w.r===undefined)w.r=toRoman(w.u);if(w.r)return w}},
   // romanized word -> best Unicode words: exact sound matches, then schwa-tolerant ones, then completions
   roman(r,max=6){const k=looseRoman(r),ks=k.replace(/a/g,"");if(!k)return[];const ex=[],near=[],pre=[];
    // the first `max` matches are enough, and a word with no exact Romanized spelling is skipped

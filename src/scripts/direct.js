@@ -12,24 +12,25 @@ export const runAt=(v,c)=>(v.slice(0,c).match(RUN)||[""])[0];
 
 // The character just typed (before the caret) ends the word: convert the word in front of it.
 // A typed . becomes the danda । (and a second . turns it into a full stop), 0-9 become Devanagari digits.
-export function commit(v,c,n=1){
- if(n>1)return span(v,c,n);
+// `fix(run, literal)` may return a better word than the literal reading (the dictionary spelling of kathmandu)
+export function commit(v,c,n=1,fix=()=>null){
+ if(n>1)return span(v,c,n,fix);
  const ch=v[c-1];if(!ch||KEYCH.test(ch))return null;
  const before=v.slice(0,c-1),run=runAt(before,before.length);
  if(ch==="."&&!run&&before.endsWith("।"))return{from:c-2,to:c,text:".",latin:"",uni:""};
  const tail=ch==="."?"।":DIGIT(ch);
  if(!run&&tail===ch)return null;
- const uni=run?roman(run).u:"";
+ const lit=run?roman(run).u:"",uni=run?fix(run,lit)||lit:"";
  return{from:c-1-run.length,to:c,text:uni+tail,latin:run,uni};
 }
 
 // Text that arrived in one go (voice typing, a phone keyboard committing a word): convert every finished word in it.
 // The last word stays as typed unless something ends it.
-function span(v,c,n){
+function span(v,c,n,fix){
  const from=c-n-runAt(v,c-n).length,seg=v.slice(from,c),toks=seg.match(new RegExp("["+KEY+"]["+KEY+"']*|[^]","g"));
  let out="";
  toks.forEach((t,i)=>{
-  if(new RegExp("["+KEY+"]").test(t[0]))out+=i<toks.length-1?roman(t).u:t;
+  if(new RegExp("["+KEY+"]").test(t[0]))out+=i<toks.length-1?(fix(t,roman(t).u)||roman(t).u):t;
   else if(t==="."&&out.endsWith("।"))out=out.slice(0,-1)+".";
   else out+=t==="."?"।":DIGIT(t)});
  return out===seg?null:{from,to:c,text:out,latin:"",uni:""}}

@@ -208,4 +208,10 @@ console.log("report endpoint and issue list checked");
   const w="hajur ghar",q=commit(w,w.length,w.length);assert.equal(q.text,"हजुर ghar");
   const x="ma ghar",y=commit(x,x.length,3);assert.equal(y,null);   // only "ar" typed: still part of the word
   assert.equal(commit("'a ",3,3).text,"'अ ")}   // a quote mark stays
+ // the dictionary spelling wins when the literal reading is not a word (kathmandu is काठमाडौं, not कथ्मन्दु)
+ {const D=makeDict(readFileSync("src/data/words.txt","utf8")),smart=(run,lit)=>{if(run.length<3||D.has(lit))return null;const w=D.exact(run);return w&&w.u!==lit?w.u:null};
+  const typeS=s=>{let v="",c=0;for(const ch of s){v+=ch;c++;const r=commit(v,c,1,smart);if(r){v=v.slice(0,r.from)+r.text;c=v.length}}return v};
+  assert.equal(typeS("kathmandu "),"काठमाडौं ");assert.equal(typeS("vayo "),"भयो ");assert.equal(typeS("tapaailai "),"तपाईंलाई ");
+  assert.equal(typeS("ma "),"म ");assert.equal(typeS("namaste "),"नमस्ते ");
+  assert.equal(commit("kathmandu hajur ",16,16,smart).text,"काठमाडौं हजुर ")}
  console.log("direct mode converts words in place")}

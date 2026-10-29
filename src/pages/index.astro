@@ -41,12 +41,15 @@ const book = '<svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V
 try{const t=localStorage.getItem("nw-theme");if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem("nw-hd")==="0")document.documentElement.classList.add("hd-off");const q=new URLSearchParams(location.search).get("m");let m=q==="roman"||q==="preeti"||q==="direct"?q:localStorage.getItem("nw-mode");if(m!=="roman"&&m!=="preeti")m="direct";if(m!=="preeti")document.documentElement.classList.add("roman");if(m==="direct")document.documentElement.classList.add("direct")}catch(e){document.documentElement.classList.add("roman")}
 </script>
 <style is:global>
+/* every text inside a card (Unicode, Romanized, Assumed, Preeti, and their placeholders) is the same size */
+:root{--fs:20px}
 .app{display:flex;flex-direction:column;height:var(--vh,100dvh);max-width:820px;margin:0 auto}
 /* header */
 header{display:flex;align-items:center;gap:6px;padding:10px 10px 6px 14px;padding-top:max(10px,env(safe-area-inset-top))}
 .hd-off header{display:none}
 .brand{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
-.logo{width:32px;height:32px;border-radius:9px;background:var(--ac);color:var(--ac-fg);display:grid;place-items:center;font-size:20px;font-weight:700;flex:none}
+/* the Devanagari glyph sits high in its line box: line-height 1 and a little top padding centre it in the square */
+.logo{width:32px;height:32px;border-radius:9px;background:var(--ac);color:var(--ac-fg);display:grid;place-items:center;font-size:20px;font-weight:700;line-height:1;padding-top:.13em;flex:none}
 .brand>div{min-width:0}
 .brand h1{margin:0;overflow:hidden;text-overflow:ellipsis;font-size:17px;font-weight:650;letter-spacing:-.01em;white-space:nowrap;line-height:1.3}
 .brand small{display:block;color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -66,24 +69,22 @@ header{display:flex;align-items:center;gap:6px;padding:10px 10px 6px 14px;paddin
 .cc:hover,.pb:hover{background:var(--surface2);color:var(--fg)}
 .pb{right:50px}
 .roman .pb{display:none}
-html:not(.roman) #pk .lab{padding-right:92px}
+html:not(.roman) #pk .lab{padding-right:100px}
 .cc.ok{color:var(--ac);border-color:var(--ac);background:var(--ac-soft)}
-.card:has(.cc) .lab{padding-right:48px}
-.hd-off #rin,.hd-off #pin,.hd-off #out,.hd-off #rom,.hd-off #pre{padding-right:48px}
-#rin,#pin{display:block;width:100%;min-height:64px;resize:vertical;border:0;border-radius:0 0 16px 16px;padding:4px 16px 12px;font:18px/1.45 ui-monospace,"SF Mono",Menlo,Consolas,monospace;background:none;color:var(--fg)}
+/* the title row is as tall as the buttons that sit in its right corner, so nothing in a card is ever under a button */
+.card:has(.cc) .lab{padding-right:56px}
+#rin,#pin{display:block;width:100%;min-height:64px;resize:vertical;border:0;border-radius:0 0 16px 16px;padding:0 16px 14px;font:var(--fs)/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;background:none;color:var(--fg)}
 #rin:focus,#pin:focus{outline:none}
 #rc:focus-within,#pk:focus-within{border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-soft)}
 #rin::placeholder,#pin::placeholder{color:var(--mut)}
-#pin{font-size:20px;letter-spacing:.03em}
-.lab{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;padding:10px 16px 0}
+#pin{font-size:var(--fs);letter-spacing:.03em}
+.lab{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;min-height:50px;padding:0 16px}
 /* collapsed (top bar hidden): no card titles, icon-only buttons, room for the restore button */
-.hd-off .lab{display:none}
-.hd-off #rin,.hd-off #pin,.hd-off #out,.hd-off #rom,.hd-off #pre{padding-top:12px}
 .hd-off .acts .bt .tx{display:none}
 .hd-off .acts .bt svg{display:inline-block!important}
 .hd-off .acts .bt,#cl{padding:0;width:38px}
-#out{min-height:96px;padding:4px 16px 10px;font-size:32px;line-height:1.6;word-break:break-word;white-space:pre-wrap}
-#out.e{color:var(--mut);font-size:16px;line-height:1.5;padding-top:10px}
+#out{min-height:96px;padding:0 16px 14px;font-size:var(--fs);line-height:1.6;word-break:break-word;white-space:pre-wrap}
+#out.e{color:var(--mut);line-height:1.5}
 #out.e b{color:var(--fg)}
 html:not(.roman) #rin{display:none}
 /* Preeti mode: the Preeti box is the input and goes first; its read-only output copy is hidden */
@@ -99,14 +100,13 @@ html:not(.roman) #pk{order:-1}
 .bt.fav.on svg{fill:currentColor}
 .sp{flex:1}
 /* the keys to press, always as plain characters: never drawn in an installed Preeti font */
-#pre{padding:2px 16px 12px;min-height:44px;font:22px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.03em;word-break:break-all;white-space:pre-wrap}
+#pre{padding:0 16px 14px;min-height:44px;font:var(--fs)/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.03em;word-break:break-all;white-space:pre-wrap}
 /* Preeti mode: the same text spelled the Romanized way, to learn or reuse it */
 /* one Romanized box in both modes: the input on top in Romanized mode, read-only spelling in Preeti mode */
 .roman #rc{order:-1}.roman #rom{display:none}
-#rom{padding:2px 16px 12px;min-height:40px;font:18px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;word-break:break-word;white-space:pre-wrap;color:var(--blue)}
-#rom:empty::before{content:"Romanized spelling appears here";font:14px system-ui,sans-serif;color:var(--mut)}
-#pre:empty::before{content:"Preeti keystrokes appear here";font:14px system-ui,sans-serif;color:var(--mut)}
-@media (min-width:700px){#out{font-size:36px}}
+#rom{padding:0 16px 14px;min-height:40px;font:var(--fs)/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;word-break:break-word;white-space:pre-wrap;color:var(--blue)}
+#rom:empty::before{content:"Romanized spelling appears here";font:var(--fs)/1.5 system-ui,sans-serif;color:var(--mut)}
+#pre:empty::before{content:"Preeti keystrokes appear here";font:var(--fs)/1.5 system-ui,sans-serif;color:var(--mut)}
 /* dock: hints, suggestions, keyboard and the toolbar row */
 #dock{flex:none;border-top:1px solid var(--line);background:var(--bg);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
 #info{min-height:20px;padding:0 6px;font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -181,22 +181,19 @@ a.bt{color:inherit;text-decoration:none}
 .nt{color:var(--mut);font-size:13.5px;margin:8px 0}
 li{margin:5px 0}
 /* the assumed reading: a friendly guess at how the text is said (kathmandu), with its own copy button */
-#asm{padding:2px 16px 12px;min-height:34px;font:600 18px/1.5 system-ui,sans-serif;color:var(--ac);word-break:break-word;white-space:pre-wrap}
+#asm{padding:0 16px 14px;min-height:34px;font:600 var(--fs)/1.5 system-ui,sans-serif;color:var(--ac);word-break:break-word;white-space:pre-wrap}
 .roman #ac{order:-1}
-.hd-off #asm{padding-right:48px;padding-top:12px}
 /* a live preview of the typed text inside the chart, so tapped letters can be seen landing */
 .echo{flex:none;min-height:42px;padding:6px 14px;border-bottom:1px solid var(--line);font-size:22px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .echo:empty::before{content:"Tap a letter to type it here";font:13px system-ui,sans-serif;color:var(--mut)}
 .lnk{color:var(--ac);font-weight:650;text-decoration:underline;margin-left:6px}
 /* Direct mode: the Unicode box is the text box; the Romanized and Preeti boxes below only show the same text */
-#din{display:none;width:100%;min-height:128px;max-height:60dvh;field-sizing:content;resize:vertical;border:0;border-radius:0 0 16px 16px;padding:14px 16px 12px;font-size:32px;line-height:1.6;background:none;color:var(--fg)}
+#din{display:none;width:100%;min-height:128px;max-height:60dvh;field-sizing:content;resize:vertical;border:0;border-radius:0 0 16px 16px;padding:0 16px 14px;font-size:var(--fs);line-height:1.6;background:none;color:var(--fg)}
 #din:focus{outline:none}
-#din::placeholder{color:var(--mut);font-size:16px}
-@media (min-width:700px){#din{font-size:36px}}
+#din::placeholder{color:var(--mut)}
 .direct #din{display:block}.direct #out,.direct #rin{display:none}
 .direct #rc,.direct #ac{order:0}.direct #rom{display:block}
 .card:has(#din:focus){border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-soft)}
-.hd-off #din{padding-right:48px;padding-top:12px}
 /* the mode menu opens above the toolbar row */
 #bar{position:relative}
 #modes{position:absolute;left:0;bottom:calc(100% + 6px);width:min(330px,100%);display:grid;gap:4px;padding:6px;background:var(--bg);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);z-index:4}

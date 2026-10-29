@@ -1,6 +1,6 @@
 # Nepali Type
 
-Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali (`ka` → क) with dictionary suggestions, or use the classic Preeti Devanagari font layout. Unicode, Romanized and Preeti text side by side. Works offline and installs as an app.
+Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali (`ka` → क) with dictionary suggestions, straight into the text box or into a Romanized box, or use the classic Preeti Devanagari font layout. Unicode, Romanized and Preeti text side by side. Works offline and installs as an app.
 
 **Live:** https://nepali-type.chandanshakya.com.np (also at https://nepali-type.pages.dev) · **Guide and cheatsheet:** [/chart/](https://nepali-type.chandanshakya.com.np/chart/)
 
@@ -12,22 +12,24 @@ Free Nepali typing in the browser, on desktop or Android. Type Romanized Nepali 
 
 | Feature | How to use it |
 |---|---|
+| **Direct mode: type in the box** | Pick **Direct** in the mode menu (bottom left). Type Romanized letters straight into the Unicode box; each word turns into Nepali when you press space, a punctuation key or Enter (`namaste` + space → नमस्ते, `.` → ।, digits → ०–९). The chips above the keyboard show what the word will become, plus dictionary words: tap one, or press <kbd>Tab</kbd> for the first. **Backspace right after a conversion gives your letters back**, so a slip is fixed by editing them. Undo (<kbd>Ctrl</kbd>+<kbd>Z</kbd>) still works, the caret can be anywhere in the text, and the Romanized, Assumed and Preeti boxes below follow as you type. Pasted Preeti keys or Latin words get a one-tap convert. |
+| **Three typing modes** | The key at the bottom left opens a menu: **Direct** (type in the Unicode box), **Romanized** (type in a Romanized box, read the result below) and **Preeti** (type or paste Preeti text). Your last choice is remembered. |
 | **Romanized typing** | Type how it sounds: `ka` क, `kaa` का, `namaste` नमस्ते. A consonant alone keeps its *a* sound, and two consonants join (`kt` क्त). Works with any phone keyboard. |
 | **Dictionary suggestions** | Over 4,000 common words and verb forms (everyday words, places, first names and surnames, English loanwords with their English spellings, and verb endings), built in and offline. Loose spellings still find the word: `nepal` → नेपाल, `bikas` → विकास, `kathmandu` → काठमाडौं. Tap the blue suggestion, or press <kbd>Tab</kbd> on a computer. In Preeti mode it finishes the word you're typing. |
 | **Live hints** | The bar above the keyboard shows what each key did and what can come next. After `k` it offers ख, का, कि and so on. Tap a hint to type it. |
-| **Preeti mode: type or paste** | Switch with the **Preeti** key at the bottom left (**ABC** goes back). The Preeti box is a normal text box: **type** with your keyboard exactly as you would in Word with the Preeti font, or **paste** Preeti text, for example copied from a Word file, and it becomes Unicode and Romanized at once. On a phone use the on-screen Preeti keyboard and the **Paste** button. ि is typed before its letter and reph र् after it; the app puts both in the right Unicode order. |
+| **Preeti mode: type or paste** | Pick **Preeti** in the mode menu (bottom left; the key reads **ABC** there, and the menu takes you back). The Preeti box is a normal text box: **type** with your keyboard exactly as you would in Word with the Preeti font, or **paste** Preeti text, for example copied from a Word file, and it becomes Unicode and Romanized at once. On a phone use the on-screen Preeti keyboard and the **Paste** button. ि is typed before its letter and reph र् after it; the app puts both in the right Unicode order. |
 | **Cursor and editing** | Click or tap in the Preeti box to place the caret, select and replace text, undo, or **drag the space bar** left or right (like Gboard) to move it. Typing, ⌫, hints, dictionary words and the on-screen keys all work at the caret. |
 | **Assumed reading** | A card under the Romanized box shows how the text is likely said in plain letters (काठमाडौं → `kathmandu`). It has its own copy button and hides when it matches the exact spelling. Dictionary words use their familiar spelling; other words use sound rules. |
-| **Paste hints** | Preeti keys pasted into Romanized mode (or Romanized words into Preeti mode) show a one-tap switch that moves the text to the right mode. |
+| **Paste hints** | Preeti keys pasted into Romanized mode (or Romanized words into Preeti mode) show a one-tap switch that moves the text to the right mode. In Direct mode, pasted Preeti keys or Latin words show a one-tap convert in place. |
 | **Three outputs** | Unicode (for the web and modern apps), Romanized spelling (to learn a word or type it again) and Devanagari font keystrokes (to paste into Preeti documents). |
-| **Same text in both modes** | Switching between Romanized and Preeti converts your text, so nothing is lost. |
+| **Same text in every mode** | Switching between Direct, Romanized and Preeti converts your text, so nothing is lost. |
 | **Copy any box** | Each box has a copy button in its top-right corner. A tick shows which one was copied. |
 | **Saved words** | **★ Save** keeps the word before the cursor. Saved words show up in the suggestion bar and under **★ Saved** (tap to type, × to remove). |
 | **Chart and cheatsheet** | **Chart** in the bottom row and the printable [`/chart/`](https://nepali-type.chandanshakya.com.np/chart/) page show the same alphabet: vowels, consonants, the full vowel table (बाह्रखरी), half letters, conjuncts, signs, digits and specials (the font's 43 extra glyphs with their Windows Alt codes: conjuncts, ॐ ऽ and punctuation like `Û` for `!`). Every letter is shown with its Romanized spelling and its font keys, and tapping a letter in the app types it in the current mode. A jump bar takes you to any consonant in the vowel table, and **Find** in the app's chart looks up a letter by Romanized spelling (`kha`, `ksh`), font key (`v`, `S`) or Devanagari. The cheatsheet also has the font keyboard and the Romanized rules. |
 | **More room** | Hide the top bar with **⌃**. Card titles disappear and the buttons become icons. Bring the bar back with **⌄** in the bottom row. |
 | **Welcome video** | Plays once on your first visit. Watch it again from Chart → Help → ▶ Watch the demo. |
 | **Dark mode** | Follows your system until you choose with the moon button. |
-| **Install and offline** | Install button in Chrome, Edge and Android; on iPhone use Share → Add to Home Screen. After the first visit it works with no internet (the demo video needs a connection). The installed app updates itself and asks you to reload when a new version is ready; long-press its icon for shortcuts (Romanized, Preeti, Cheatsheet). `/?m=roman` and `/?m=preeti` open a given mode. |
+| **Install and offline** | Install button in Chrome, Edge and Android; on iPhone use Share → Add to Home Screen. After the first visit it works with no internet (the demo video needs a connection). The installed app updates itself and asks you to reload when a new version is ready; long-press its icon for shortcuts (Direct, Romanized, Preeti, Cheatsheet). `/?m=direct`, `/?m=roman` and `/?m=preeti` open a given mode. |
 | **Report a problem or idea** | The **⚑** button in the top bar (also in Chart → Help) reports a missing word, a wrong conversion, a misspelled suggestion, a bug or an idea. **No account needed**: it is sent as an issue by the project, with an optional name. Prefer your own GitHub account? "Open on GitHub instead" opens the same report prefilled. After a word the dictionary does not know, a **⚑ Report** chip appears in the suggestion bar. |
 | **Open and solved reports** | [`/issues/`](https://nepali-type.chandanshakya.com.np/issues/) lists reports that are still open and the ones already solved. |
 | **Private** | Everything runs in your browser. Text, saved words and settings stay on your device. No account, no tracking. |
@@ -78,6 +80,7 @@ src/
   styles/base.css       theme tokens shared by both pages
   scripts/nepali.js     conversion logic (Preeti ⇄ Unicode, Romanized → Unicode), no DOM
   scripts/app.js        UI: modes, keyboard, hints, dictionary, saved words, theme, install
+  scripts/direct.js     Direct mode: converting the Romanized word at the caret (pure functions)
   scripts/charts.js     the alphabet shown by the in-app chart and the cheatsheet
   components/Cell.astro one cheatsheet cell
   data/words.txt        dictionary: one word per line, optional extra spellings after it

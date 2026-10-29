@@ -23,15 +23,17 @@ const desc = "How to type Nepali: every Romanized spelling, the full Preeti / De
 const dictCount = (Math.floor(wordList.split("\n").filter((l) => l && l[0] !== "#").length / 500) * 500).toLocaleString("en");
 // every feature, documented once here: [title, how it works]
 const features: [string, string][] = [
+  ["Typing modes", "The key at the bottom left opens a menu with three modes: <b>Direct</b>, <b>Romanized</b> and <b>Preeti</b>. Your last choice is remembered, and the installed app has a shortcut for each (<kbd>/?m=direct</kbd>, <kbd>/?m=roman</kbd>, <kbd>/?m=preeti</kbd>)."],
+  ["Direct mode: type in the box", "Type Romanized letters straight into the Unicode box. Each word turns into Nepali when you press <b>space</b>, a punctuation key or <b>Enter</b>: <kbd>namaste</kbd> + space → नमस्ते, <kbd>.</kbd> → ।, digits → ०–९. While you type, the chips above the keyboard show what the word will become, with dictionary words beside it: tap one, or press <kbd>Tab</kbd> for the first. <b>Backspace right after a conversion gives your letters back</b> so you can fix a slip. <kbd>Ctrl</kbd>+<kbd>Z</kbd> still undoes, you can edit anywhere in the text, and the Romanized, Assumed and Preeti boxes below follow as you type."],
   ["Romanized typing", "Type Nepali the way it sounds in English letters: <kbd>ka</kbd> क, <kbd>kaa</kbd> का, <kbd>namaste</kbd> नमस्ते. A consonant alone keeps its <b>a</b> sound and two consonants join (<kbd>kt</kbd> क्त). Works with any phone keyboard."],
-  ["Dictionary suggestions", `Over ${dictCount} common words and verb forms are built in and work offline. Loose spellings still find the word: <kbd>nepal</kbd> → नेपाल, <kbd>bikas</kbd> → विकास, <kbd>kathmandu</kbd> → काठमाडौं. Tap a blue suggestion, or press <kbd>Tab</kbd> on a computer. In font keys mode the dictionary finishes the word you are typing.`],
+  ["Dictionary suggestions", `Over ${dictCount} common words and verb forms are built in and work offline. Loose spellings still find the word: <kbd>nepal</kbd> → नेपाल, <kbd>bikas</kbd> → विकास, <kbd>kathmandu</kbd> → काठमाडौं. Tap a blue suggestion, or press <kbd>Tab</kbd> on a computer (in Direct mode too). In font keys mode the dictionary finishes the word you are typing.`],
   ["Live hints", "The bar above the keyboard shows what each key did and what you can type next: after <kbd>k</kbd> it offers ख, का, कि and the rest. Tap a hint to type it."],
-  ["Preeti mode: type or paste", "Switch with the <b>Preeti</b> key at the bottom left (<b>ABC</b> goes back). The Preeti box is a normal text box: <b>type</b> with your keyboard exactly as you would in Word with the Preeti font, or <b>paste</b> Preeti text, for example copied from a Word file, and it becomes Unicode and Romanized at once. On a phone use the on-screen Preeti keyboard and the <b>Paste</b> button. <b>ि</b> is typed before its letter and reph र् after it; the app puts both in the right Unicode order. <b>Shift</b>: tap once for the next key, twice to lock."],
+  ["Preeti mode: type or paste", "Pick <b>Preeti</b> in the mode menu at the bottom left (there the key reads <b>ABC</b>, and the menu takes you back). The Preeti box is a normal text box: <b>type</b> with your keyboard exactly as you would in Word with the Preeti font, or <b>paste</b> Preeti text, for example copied from a Word file, and it becomes Unicode and Romanized at once. On a phone use the on-screen Preeti keyboard and the <b>Paste</b> button. <b>ि</b> is typed before its letter and reph र् after it; the app puts both in the right Unicode order. <b>Shift</b>: tap once for the next key, twice to lock."],
   ["Cursor and editing", "Click or tap in the Preeti box to place the caret, select and replace text, undo, or <b>drag the space bar</b> left or right (like Gboard) to move it. Typing, ⌫, hints, dictionary words and the on-screen keys all work at the caret."],
   ["Three outputs, side by side", "Every word appears as Unicode (for the web, phones and modern apps), as Romanized spelling (to learn it or type it again) and as Devanagari font keystrokes (to paste into documents set in Preeti)."],
   ["Assumed reading", "A card under the Romanized box shows how the text is likely said in plain letters: <kbd>काठमाडौं</kbd> → kathmandu. It has its own copy button and hides when it equals the exact spelling."],
-  ["Paste hints", "Paste Preeti keys into Romanized mode (or Romanized words into Preeti mode) and the app offers a one-tap switch that moves the text for you."],
-  ["Same text in both modes", "Switching between Romanized and Preeti converts what you typed, so you never lose your text."],
+  ["Paste hints", "Paste Preeti keys into Romanized mode (or Romanized words into Preeti mode) and the app offers a one-tap switch that moves the text for you. In Direct mode, pasted Preeti keys or Latin words get a one-tap convert in place."],
+  ["Same text in every mode", "Switching between Direct, Romanized and Preeti converts what you typed, so you never lose your text."],
   ["Copy any box", "Each box has its own copy button in the top-right corner. A tick confirms which one was copied."],
   ["Saved words", "Press <b>★ Save</b> to keep the word before the cursor. Saved words appear in the suggestion bar and under <b>★ Saved</b>, where you can tap to type them or × to remove them. They stay on your device."],
   ["Chart and this cheatsheet", "<b>Chart</b> in the bottom row opens a quick reference inside the app; this page is the full printable version."],
@@ -124,7 +126,7 @@ footer a{color:var(--ac)}
 </header>
 <main class="wrap">
  <h1>Nepali typing cheatsheet</h1>
- <p class="lead">Two ways to type in <a href="/" style="color:var(--ac)">Nepali Type</a>: <b>Romanized</b> (type how it sounds) and <b>Preeti</b> (type or paste the classic Devanagari font layout, as used by Preeti).</p>
+ <p class="lead">Three ways to type in <a href="/" style="color:var(--ac)">Nepali Type</a>: <b>Direct</b> (type how it sounds, right in the text box), <b>Romanized</b> (the same typing in a separate box, with the result below) and <b>Preeti</b> (type or paste the classic Devanagari font layout, as used by Preeti).</p>
  <figure class="demo"><video src="/demo.mp4" poster="/demo.webp" controls muted playsinline preload="none" width="720" height="1280" aria-label="Nepali Type demo video"></video><figcaption>Every feature in under a minute.</figcaption></figure>
 
  <h2 id="features">Features <span>how to use</span></h2>
@@ -162,6 +164,7 @@ footer a{color:var(--ac)}
   <li><kbd class="kr">n</kbd> before k, kh, g or gh becomes ङ: <kbd class="kr">gangaa</kbd> गङ्गा.</li>
   <li><kbd class="kr">\</kbd> adds a halant at the end of a word: <kbd class="kr">chhan\</kbd> छन्. <kbd class="kr">'</kbd> keeps letters apart: <kbd class="kr">ra'aa</kbd> रआ, <kbd class="kr">k'kh</kbd> कख.</li>
   <li><kbd class="kr">.</kbd> types । and <kbd class="kr">..</kbd> types a full stop. Digits become ०–९.</li>
+  <li>These rules are the same in Direct mode: the word converts when you press space. <kbd class="kr">Backspace</kbd> straight after that brings the letters back to edit.</li>
   <li>Loose spellings are fine: the dictionary suggests <b>नेपाल</b> for <kbd class="kr">nepal</kbd> and <b>विकास</b> for <kbd class="kr">bikas</kbd>.</li>
  </ul>
  <h3>Examples</h3>
@@ -179,6 +182,7 @@ footer a{color:var(--ac)}
   <li><b>Reph र्</b> is typed <i>after</i> its letter: <kbd>c</kbd><kbd>y</kbd><kbd>{"{"}</kbd> अर्थ.</li>
   <li><b>m</b> is a hook, not a letter: <kbd>km</kbd> फ, <kbd>pm</kbd> ऊ, <kbd>em</kbd> झ, <kbd>qm</kbd> क्र, <kbd>Qm</kbd> क्त. For म type <kbd>d</kbd>.</li>
   <li><kbd>0f</kbd>, <kbd>if</kbd> and <kbd>If</kbd> are single letters: ण, ष, क्ष.</li>
+  <li>In Direct mode a word waits as Latin letters until you press space. Pick a blue chip or press <kbd>Tab</kbd> for a dictionary word instead.</li>
   <li>Press <b>★ Save</b> in the app to keep a word. Saved words appear in the suggestion bar.</li>
  </ul>
  <footer>Nepali Type is free, open source, works offline and keeps everything on your device. <a href="/">Start typing →</a> · <a href={REPO} target="_blank" rel="noopener">Source on GitHub</a> · <a href="/?report=1">Report a problem or idea</a> · <a href="/issues/">Open &amp; solved reports</a></footer>

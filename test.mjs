@@ -179,3 +179,33 @@ console.log("report endpoint and issue list checked");
  assert.ok(looksLikeUnicode("नेपाल")&&!looksLikeUnicode("nepal"));
  assert.ok(looksLikeRomanized("namaste hajur")&&!looksLikeRomanized("g]kfn"));
  console.log("texting, reading and paste detection")}
+
+// ---------- Direct mode: Romanized words convert in place ----------
+{const {runAt,commit,pick,revert,convertAll,hasLatin}=await import("./src/scripts/direct.js");
+ // type a text one character at a time, the way the box does: convert after every boundary key
+ const typeIn=(s)=>{let v="",c=0;for(const ch of s){v=v.slice(0,c)+ch+v.slice(c);c++;const r=commit(v,c);if(r){v=v.slice(0,r.from)+r.text+v.slice(r.to);c=r.from+r.text.length}}return v};
+ assert.equal(typeIn("namaste "),"नमस्ते ");
+ assert.equal(typeIn("kaaThamaaDauM ma ghar jaanchhu."),"काठमाडौं म घर जान्छु।");
+ assert.equal(typeIn("123 "),"१२३ ");
+ assert.equal(typeIn("namaste.."),"नमस्ते.");            // a second . is a full stop
+ assert.equal(typeIn("ra'aa "),"रआ ");
+ assert.equal(typeIn("namaste\n"),"नमस्ते\n");
+ assert.equal(typeIn("namaste, hajur?"),"नमस्ते, हजुर?");
+ assert.equal(runAt("नमस्ते kaa",10),"kaa");assert.equal(runAt("नमस्ते ",7),"");assert.equal(runAt("a'",2),"a'");assert.equal(runAt("'",1),"");
+ // nothing to do for a space after Devanagari
+ assert.equal(commit("नमस्ते ",7),null);
+ // Backspace right after a conversion gives the letters back
+ {const v="नमस्ते",r=revert(v,6,{end:6,latin:"namaste",uni:"नमस्ते"});assert.deepEqual([r.from,r.to,r.text],[0,6,"namaste"]);
+  assert.equal(revert(v,5,{end:6,latin:"namaste",uni:"नमस्ते"}),null);assert.equal(revert(v,6,null),null)}
+ // a dictionary word replaces the word at the caret and adds a space
+ assert.deepEqual(pick("hajur nep",9,"नेपाल"),{from:6,to:9,text:"नेपाल ",latin:"nep",uni:"नेपाल"});
+ assert.equal(convertAll("namaste hajur, ठीक chha"),"नमस्ते हजुर, ठीक छ");
+ assert.ok(hasLatin("ठीक chha")&&!hasLatin("ठीक छ a"));
+ // a conversion typed letter by letter equals converting the word at once
+ for(const w of ["nepaal","dhanyabaad","kRiShi","chhan\\","saMsaar","chaa~d"])assert.equal(typeIn(w+" "),roman(w).u+" ",w);
+ // text that arrives in one go converts its finished words, and keeps the last one pending
+ {const v="namaste ma ghar.",r=commit(v,v.length,v.length);assert.equal(r.text,"नमस्ते म घर।");
+  const w="hajur ghar",q=commit(w,w.length,w.length);assert.equal(q.text,"हजुर ghar");
+  const x="ma ghar",y=commit(x,x.length,3);assert.equal(y,null);   // only "ar" typed: still part of the word
+  assert.equal(commit("'a ",3,3).text,"'अ ")}   // a quote mark stays
+ console.log("direct mode converts words in place")}

@@ -1,7 +1,7 @@
 {
   "name": "Nepali Type",
   "short_name": "Nepali Type",
-  "description": "Type Nepali in Unicode and Devanagari font (Preeti layout). Romanized or font keys. Works offline.",
+  "description": "Type Nepali in Unicode and Devanagari font (Preeti layout). Direct, Romanized or font keys. Works offline.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -31,6 +31,19 @@
     }
   ],
   "shortcuts": [
+    {
+      "name": "Type directly",
+      "short_name": "Direct",
+      "description": "Type in the box, words turn into Nepali",
+      "url": "/?m=direct",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
     {
       "name": "Type in Romanized",
       "short_name": "Romanized",

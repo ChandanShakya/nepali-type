@@ -7,7 +7,7 @@ body:
     id: mode
     attributes:
       label: Mode
-      description: Romanized or font keys.
+      description: Direct, Romanized or font keys.
   - type: textarea
     id: input
     attributes:
